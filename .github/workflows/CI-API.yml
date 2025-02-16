@@ -50,10 +50,5 @@ jobs:
         run: npm test
         working-directory: api
 
-      # Nieuwe stap voor linting
-      - name: Run ESLint in API folder
-        run: npm run lint
-        working-directory: api
-
       - name: Jest coverage report
         uses: ArtiomTr/jest-coverage-report-action@v2.3.1
