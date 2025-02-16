@@ -2,8 +2,8 @@
 
 name: CI API
 
-# Geef de workflow de benodigde rechten om check runs te schrijven
 permissions:
+  contents: read
   checks: write
 
 on:
