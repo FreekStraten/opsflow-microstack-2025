@@ -27,7 +27,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18.x, 20.x, 22.x]
+        node-version: [ 18.x, 20.x, 22.x ]
 
     steps:
       - uses: actions/checkout@v4
@@ -48,6 +48,11 @@ jobs:
 
       - name: Run tests in API folder
         run: npm test
+        working-directory: api
+
+      # Nieuwe stap voor linting
+      - name: Run ESLint in API folder
+        run: npm run lint
         working-directory: api
 
       - name: Jest coverage report

@@ -1,0 +1,32 @@
+# .github/workflows/CI-LINT.yml
+
+name: CI Lint
+
+# Trigger de workflow bij elke push en pull-request op de main branch (zonder path restrictie)
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Stap 1: Code uitchecken
+      - uses: actions/checkout@v4
+
+      # Stap 2: Node.js instellen (pas de versie aan naar wens)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+
+      # Stap 3: Installeer alle afhankelijkheden (gebruik npm ci voor een schone installatie)
+      - name: Install dependencies
+        run: npm ci
+
+      # Stap 4: Voer ESLint uit over het gehele project
+      - name: Run ESLint
+        run: npm run lint
