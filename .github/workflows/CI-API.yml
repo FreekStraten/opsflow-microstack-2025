@@ -2,10 +2,10 @@
 
 name: CI API
 
-# Geef de workflow de benodigde rechten om check runs te schrijven en inhoud te lezen
 permissions:
-  contents: read
-  checks: write
+  contents: write       # Nodig voor write toegang tot de repo content
+  checks: write         # Nodig voor het schrijven van check runs/annotations
+  pull-requests: write   # Extra recht om pull request updates te doen
 
 on:
   push:
@@ -21,7 +21,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    # Zet hier de PAT-token als GITHUB_TOKEN zodat de acties de juiste rechten hebben
+    # Gebruik je PAT door de GITHUB_TOKEN-variabele te overschrijven
     env:
       GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
 
