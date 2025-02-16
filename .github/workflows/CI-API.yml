@@ -21,6 +21,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    # Zet hier de PAT-token als GITHUB_TOKEN zodat de acties de juiste rechten hebben
+    env:
+      GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+
     strategy:
       matrix:
         node-version: [18.x, 20.x, 22.x]
@@ -48,5 +52,3 @@ jobs:
 
       - name: Jest coverage report
         uses: ArtiomTr/jest-coverage-report-action@v2.3.1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
