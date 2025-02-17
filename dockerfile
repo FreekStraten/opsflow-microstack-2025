@@ -1,6 +1,6 @@
-FROM node:14
+FROM node:20
 
-COPY api /app
+COPY . /app
 WORKDIR /app
 
 RUN npm install
