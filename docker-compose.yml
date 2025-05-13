@@ -1,0 +1,42 @@
+version: '3.8'  # Versie van Docker Compose syntax
+
+services:
+  # MongoDB service
+  mongodb:
+    image: mongo:latest  # Gebruik de officiële Mongo image
+    container_name: mijn-mongo  # Geef de container een herkenbare naam
+    environment:
+      # Stel een custom username en password in (BELANGRIJK voor beveiliging)
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: myapp
+    volumes:
+      # Map een lokale folder naar MongoDB's data directory
+      # Dit zorgt ervoor dat je data PERSISTENT is (niet verloren gaat als container stopt)
+      - ./data/mongodb:/data/db
+    # Geen ports hier! Database is alleen intern bereikbaar (veiliger)
+    # MongoDB draait standaard op poort 27017 binnen het Docker netwerk
+    restart: unless-stopped  # Container herstart automatisch tenzij je hem stopt
+
+  # Je API service
+  api:
+    build:
+      context: .  # Bouw vanuit de huidige directory
+      dockerfile: Dockerfile.prod  # Gebruik je productie Dockerfile
+    container_name: mijn-api
+    ports:
+      # Map poort 3000 van localhost naar poort 12345 in container
+      - "3000:12345"
+    environment:
+      # Database connectiegegevens
+      # LET OP: Gebruik 'mongodb' als hostname (= service naam in compose)
+      MONGO_URL: mongodb://admin:password123@mongodb:27017/myapp?authSource=admin
+      PORT: 12345
+    depends_on:
+      # Wacht tot MongoDB service beschikbaar is voordat API start
+      - mongodb
+    restart: unless-stopped
+
+# Optioneel: Een named volume voor betere performance
+volumes:
+  mongodb_data:

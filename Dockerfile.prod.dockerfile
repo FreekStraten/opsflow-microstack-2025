@@ -1,13 +1,24 @@
 FROM node:20
 
-COPY . /app
+# Gebruik een specifieke Node.js versie voor consistentie
 WORKDIR /app
 
+# Kopieer package files eerst (betere Docker layer caching)
+COPY package*.json ./
+
+# Installeer dependencies
 RUN npm install
 
-ENV PORT=12345
-ENV MONGO_URL=mongodb://mijn-mongo:27017
+# Kopieer de rest van de code
+COPY . .
 
+# Maak een non-root user voor beveiliging
+RUN groupadd -r nodeuser && useradd -r -g nodeuser nodeuser
+RUN chown -R nodeuser:nodeuser /app
+USER nodeuser
+
+# Expose de poort
+EXPOSE 12345
+
+# Start de applicatie
 CMD ["npm", "start"]
-
-#Dockerignore maken en versie 20 node

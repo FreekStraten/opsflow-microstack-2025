@@ -7,6 +7,9 @@ var logger = require('morgan');
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 
+// Database connectie
+const { connectToDatabase } = require('./services/database');
+
 var app = express();
 
 // view engine setup
@@ -37,5 +40,8 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
+
+// Connecteer met database bij opstarten
+connectToDatabase().catch(console.error);
 
 module.exports = app;
