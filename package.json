@@ -6,7 +6,9 @@
     "start": "node ./bin/www",
     "dev": "nodemon -r dotenv/config --legacy-watch ./bin/www",
     "test": "jest",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "init-data": "node scripts/init-data.js",
+    "setup": "npm run init-data && npm start"
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",

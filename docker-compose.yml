@@ -1,7 +1,14 @@
 services:
-  # Remove the entire mongodb service block
+  # MongoDB service zonder authenticatie
+  mongodb:
+    image: mongo:latest
+    container_name: mijn-mongo
+    volumes:
+      - ./data:/data/db
+    # Geen ports mapping zodat hij niet van buitenaf bereikbaar is
+    restart: unless-stopped
 
-  # Je API service - updated to use local MongoDB
+  # Je API service
   api:
     build:
       context: .
@@ -10,13 +17,14 @@ services:
     ports:
       - "3000:12345"
     environment:
-      MONGO_URL: mongodb://host.docker.internal:27017/myapp
+      MONGO_URL: mongodb://mijn-mongo:27017/myapp
       PORT: 12345
       DB_NAME: myapp
-    # Remove depends_on for mongodb since we're using local
+    depends_on:
+      - mongodb
     restart: unless-stopped
 
-  # Frontend service (unchanged)
+  # Frontend service
   frontend:
     build:
       context: ./frontend
