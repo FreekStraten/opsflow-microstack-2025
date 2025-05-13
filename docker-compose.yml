@@ -25,3 +25,15 @@ services:
     depends_on:
       - mongodb
     restart: unless-stopped
+
+    # Nieuwe frontend service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mijn-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+    restart: unless-stopped
