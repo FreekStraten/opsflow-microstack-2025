@@ -10,6 +10,13 @@ services:
     volumes:
       - ./data/mongodb:/data/db
     restart: unless-stopped
+    # Healthcheck toevoegen voor MongoDB
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/myapp --quiet
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
 
   # Je API service
   api:
@@ -23,10 +30,11 @@ services:
       MONGO_URL: mongodb://admin:password123@mongodb:27017/myapp?authSource=admin
       PORT: 12345
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy  # Wacht tot MongoDB healthy is
     restart: unless-stopped
 
-    # Nieuwe frontend service
+  # Nieuwe frontend service
   frontend:
     build:
       context: ./frontend

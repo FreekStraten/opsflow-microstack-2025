@@ -1,0 +1,4 @@
+show databases
+db.testCollection.insertOne({test: "Hello World"})
+use myapp
+use admin
