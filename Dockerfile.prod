@@ -1,0 +1,19 @@
+FROM node:20
+
+WORKDIR /app
+
+# Kopieer code
+COPY . .
+
+# Installeer dependencies
+RUN npm install
+
+# Omgevingsvariabelen voor PORT en MONGO_URL
+ENV PORT=12345
+ENV MONGO_URL=mongodb://mongodb:27017
+
+# Expose de poort
+EXPOSE 12345
+
+# Start commando
+CMD ["npm", "start"]
