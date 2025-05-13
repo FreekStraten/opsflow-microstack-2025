@@ -1,24 +1,7 @@
 services:
-  # MongoDB service
-  mongodb:
-    image: mongo:latest
-    container_name: mijn-mongo
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: password123
-      MONGO_INITDB_DATABASE: myapp
-    volumes:
-      - ./data/mongodb:/data/db
-    restart: unless-stopped
-    # Healthcheck toevoegen voor MongoDB
-    healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/myapp --quiet
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 40s
+  # Remove the entire mongodb service block
 
-  # Je API service
+  # Je API service - updated to use local MongoDB
   api:
     build:
       context: .
@@ -27,14 +10,13 @@ services:
     ports:
       - "3000:12345"
     environment:
-      MONGO_URL: mongodb://admin:password123@mongodb:27017/myapp?authSource=admin
+      MONGO_URL: mongodb://host.docker.internal:27017/myapp
       PORT: 12345
-    depends_on:
-      mongodb:
-        condition: service_healthy  # Wacht tot MongoDB healthy is
+      DB_NAME: myapp
+    # Remove depends_on for mongodb since we're using local
     restart: unless-stopped
 
-  # Nieuwe frontend service
+  # Frontend service (unchanged)
   frontend:
     build:
       context: ./frontend
