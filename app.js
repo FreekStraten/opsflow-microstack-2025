@@ -41,7 +41,29 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
-// Connecteer met database bij opstarten
-connectToDatabase().catch(console.error);
+// Connecteer met database bij opstarten en initialiseer data
+connectToDatabase()
+    .then(async () => {
+      console.log('Database connected, checking for initial data...');
+
+      // Check if we need to add initial data
+      const db = require('./services/database').db;
+      const count = await db.collection('users').countDocuments();
+
+      if (count === 0) {
+        console.log('No users found, adding initial data...');
+        const users = [
+          { name: "John Doe", email: "john@example.com", createdAt: new Date() },
+          { name: "Jane Smith", email: "jane@example.com", createdAt: new Date() },
+          { name: "Bob Johnson", email: "bob@example.com", createdAt: new Date() }
+        ];
+
+        await db.collection('users').insertMany(users);
+        console.log('Initial data added successfully');
+      } else {
+        console.log(`Found ${count} users, skipping initialization`);
+      }
+    })
+    .catch(console.error);
 
 module.exports = app;
