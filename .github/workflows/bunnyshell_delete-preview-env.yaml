@@ -6,16 +6,13 @@ on:
 
 jobs:
   delete:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Delete environment
-        uses: bunnyshell/delete-env-action@v2
-        with:
-          bunnyshell-access-token: ${{ secrets.BUNNYSHELL_ACCESS_TOKEN }}
-          bunnyshell-environment-project-id: ${{ vars.BUNNYSHELL_PROJECT_ID }}
-          bunnyshell-k8s-cluster-id: ${{ vars.BUNNYSHELL_CLUSTER_ID }}
-          bunnyshell-yaml-path: .bunnyshell/bunnyshell.yaml
+    uses: bunnyshell/workflows-reusable/.github/workflows/delete-env.yml@v2
+    permissions:
+      pull-requests: write
+    with:
+      project-id: ${{ vars.BUNNYSHELL_PROJECT_ID }}
+      pr-number: ${{ github.event.number }}
+      comment-on-pr: true
+      allowed-users: '*'
+    secrets:
+      bunnyshell-access-token: ${{ secrets.BUNNYSHELL_ACCESS_TOKEN }}

@@ -6,17 +6,67 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    uses: bunnyshell/workflows-reusable/.github/workflows/deploy-env.yml@v2
+    permissions:
+      pull-requests: write
+    with:
+      project-id: ${{ vars.BUNNYSHELL_PROJECT_ID }}
+      cluster-id: ${{ vars.BUNNYSHELL_CLUSTER_ID }}
+      pr-number: ${{ github.event.number }}
+      comment-on-pr: true
+      allowed-users: '*'
+      bunnyshell-yaml-contents: |
+        kind: Environment
+        name: "preview-pr-${{ github.event.number }}"
+        type: primary
+        environmentVariables:
+          DemoVarDefinedInBunnyshell: demo-value
+        urlHandle: preview-devops-freek-pr-${{ github.event.number }}
+        components:
+          - name: mongodb
+            kind: Service
+            dockerCompose:
+              image: 'mongo:latest'
+              restart: unless-stopped
+              volumes:
+                - './data:/data/db'
+            ports:
+              - port: 27017
+                name: mongo
+                protocol: TCP
 
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
+          - name: api
+            kind: Service
+            dockerCompose:
+              environment:
+                PORT: 12345
+                MONGO_URL: 'mongodb://mongodb:27017'
+                DB_NAME: myapp
+              build:
+                context: .
+                dockerfile: Dockerfile.prod
+              depends_on:
+                - mongodb
+              restart: unless-stopped
+            ports:
+              - port: 12345
+                name: api
+                protocol: TCP
+                public: true
 
-      - name: Deploy environment
-        uses: bunnyshell/deploy-env-action@v2
-        with:
-          bunnyshell-access-token: ${{ secrets.BUNNYSHELL_ACCESS_TOKEN }}
-          bunnyshell-environment-project-id: ${{ vars.BUNNYSHELL_PROJECT_ID }}
-          bunnyshell-k8s-cluster-id: ${{ vars.BUNNYSHELL_CLUSTER_ID }}
-          bunnyshell-yaml-path: .bunnyshell/bunnyshell.yaml
-          allowed-users: "*"
+          - name: frontend
+            kind: Service
+            dockerCompose:
+              build:
+                context: ./frontend
+                dockerfile: Dockerfile
+              depends_on:
+                - api
+              restart: unless-stopped
+            ports:
+              - port: 80
+                name: frontend
+                protocol: TCP
+                public: true
+    secrets:
+      bunnyshell-access-token: ${{ secrets.BUNNYSHELL_ACCESS_TOKEN }}
