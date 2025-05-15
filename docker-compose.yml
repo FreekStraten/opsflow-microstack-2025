@@ -1,37 +1,33 @@
 services:
-  # MongoDB service zonder authenticatie
   mongodb:
     image: mongo:latest
     container_name: mijn-mongo
     volumes:
       - ./data:/data/db
-    # Geen ports mapping zodat hij niet van buitenaf bereikbaar is
     restart: unless-stopped
 
-  # Je API service
   api:
     build:
       context: .
       dockerfile: Dockerfile.prod
     container_name: mijn-api
     ports:
-      - "3000:12345"
+      - "80:12345"  # Changed to port 80 for Bunnyshell
     environment:
-      MONGO_URL: mongodb://mijn-mongo:27017/myapp
+      MONGO_URL: mongodb://mijn-mongo:27017
       PORT: 12345
       DB_NAME: myapp
     depends_on:
       - mongodb
     restart: unless-stopped
 
-  # Frontend service
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile  # Now with capital D
     container_name: mijn-frontend
     ports:
-      - "8080:80"
+      - "80:80"  # Changed to port 80 for Bunnyshell
     depends_on:
       - api
     restart: unless-stopped
