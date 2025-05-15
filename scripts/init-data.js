@@ -1,4 +1,4 @@
-const { MongoClient } = require('mongodb'); //
+const { MongoClient } = require('mongodb'); ///
 
 async function initData() {
     const uri = process.env.MONGO_URL || 'mongodb://mijn-mongo:27017';
