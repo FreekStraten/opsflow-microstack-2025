@@ -24,7 +24,7 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile  # Now with capital D
+      dockerfile: frontend/Dockerfile  # Now with capital D
     container_name: mijn-frontend
     ports:
       - "80:80"  # Changed to port 80 for Bunnyshell
