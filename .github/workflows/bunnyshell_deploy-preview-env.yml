@@ -5,16 +5,18 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
 jobs:
   deploy-preview:
-    name: Deploy Preview Environment
-    # Add a condition to check if we have the required secrets
-    if: vars.BUNNYSHELL_PROJECT_ID != '' && vars.BUNNYSHELL_CLUSTER_ID != '' && secrets.BUNNYSHELL_ACCESS_TOKEN != ''
-    uses: bunnyshell/workflows/.github/workflows/deploy-env.yaml@main
+    uses: bunnyshell/workflows/.github/workflows/deploy-env.yaml@2.1.0
     with:
       project-id: ${{ vars.BUNNYSHELL_PROJECT_ID }}
       cluster-id: ${{ vars.BUNNYSHELL_CLUSTER_ID }}
-      bunnyshell-yaml-path: .bunnyshell/bunnyshell.yaml
+      bunnyshell-yaml-path: .bunnyshell/bunnyshell.yml
       pr-number: ${{ github.event.number }}
       comment-on-pr: true
       allowed-users: "*"
