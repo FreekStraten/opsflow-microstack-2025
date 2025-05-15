@@ -19,7 +19,7 @@ jobs:
           echo "CLUSTER_ID exists: ${{ vars.BUNNYSHELL_CLUSTER_ID != '' }}"
           echo "ACCESS_TOKEN exists: ${{ secrets.BUNNYSHELL_ACCESS_TOKEN != '' }}"
 
-      - name: Check bunnyshell.yml
+      - name: Check bunnyshell.yaml
         run: |
           if [ -f ".bunnyshell/bunnyshell.yaml" ]; then
             echo "bunnyshell.yaml found"
