@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   delete-preview:
-    uses: bunnyshell/workflows/.github/workflows/delete-env.yaml@2.1.0
+    uses: bunnyshell/workflows/.github/workflows/delete-env.yaml@v2
     with:
       project-id: ${{ vars.BUNNYSHELL_PROJECT_ID }}
       pr-number: ${{ github.event.number }}

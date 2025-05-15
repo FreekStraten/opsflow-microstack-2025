@@ -1,3 +1,4 @@
+
 # .github/workflows/CI-LINT.yml
 
 name: CI Lint
@@ -27,6 +28,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Stap 4: Voer ESLint uit over het gehele project
+      # Stap 4: Voer ESLint uit over het gehele project (maar skip node_modules)
       - name: Run ESLint
-        run: npm run lint
+        run: npm run lint -- --ignore-pattern "node_modules/"
