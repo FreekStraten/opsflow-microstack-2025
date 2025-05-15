@@ -1,3 +1,4 @@
+
 name: Bunnyshell - Deploy Preview Environment
 
 on:
@@ -6,16 +7,16 @@ on:
 
 jobs:
   deploy-preview:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Deploy Preview Environment
-        uses: bunnyshell/workflows/.github/workflows/deploy-env.yaml@v2
-        with:
-          bunnyshell-access-token: ${{ secrets.BUNNYSHELL_ACCESS_TOKEN }}
-          bunnyshell-project-id: ${{ vars.BUNNYSHELL_PROJECT_ID }}
-          bunnyshell-cluster-id: ${{ vars.BUNNYSHELL_CLUSTER_ID }}
-          bunnyshell-yaml-path: .bunnyshell/bunnyshell.yaml
-          allowed-users: "*"
+    name: Deploy Preview Environment
+    # Add a condition to check if we have the required secrets
+    if: vars.BUNNYSHELL_PROJECT_ID != '' && vars.BUNNYSHELL_CLUSTER_ID != '' && secrets.BUNNYSHELL_ACCESS_TOKEN != ''
+    uses: bunnyshell/workflows/.github/workflows/deploy-env.yaml@main
+    with:
+      project-id: ${{ vars.BUNNYSHELL_PROJECT_ID }}
+      cluster-id: ${{ vars.BUNNYSHELL_CLUSTER_ID }}
+      bunnyshell-yaml-path: .bunnyshell/bunnyshell.yaml
+      pr-number: ${{ github.event.number }}
+      comment-on-pr: true
+      allowed-users: "*"
+    secrets:
+      bunnyshell-access-token: ${{ secrets.BUNNYSHELL_ACCESS_TOKEN }}
