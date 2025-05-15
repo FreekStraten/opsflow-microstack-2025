@@ -1,4 +1,3 @@
-
 name: Bunnyshell - Deploy Preview Environment
 
 on:
@@ -13,11 +12,11 @@ permissions:
 
 jobs:
   deploy-preview:
-    uses: bunnyshell/workflows/.github/workflows/deploy-env.yaml@v2.1.0
+    uses: bunnyshell/workflows/.github/workflows/deploy-env.yaml@v2
     with:
       project-id: ${{ vars.BUNNYSHELL_PROJECT_ID }}
       cluster-id: ${{ vars.BUNNYSHELL_CLUSTER_ID }}
-      bunnyshell-yaml-path: .bunnyshell/bunnyshell.yaml 
+      bunnyshell-yaml-path: .bunnyshell/bunnyshell.yaml
       pr-number: ${{ github.event.number }}
       comment-on-pr: true
       allowed-users: "*"
