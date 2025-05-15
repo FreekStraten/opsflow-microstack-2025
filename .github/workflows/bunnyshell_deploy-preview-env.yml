@@ -7,6 +7,9 @@ on:
 
 jobs:
   deploy-preview:
+    name: Deploy Preview Environment
+    # Add a condition to check if we have the required secrets
+    if: vars.BUNNYSHELL_PROJECT_ID != '' && vars.BUNNYSHELL_CLUSTER_ID != '' && secrets.BUNNYSHELL_ACCESS_TOKEN != ''
     uses: bunnyshell/workflows/.github/workflows/deploy-env.yaml@main
     with:
       project-id: ${{ vars.BUNNYSHELL_PROJECT_ID }}
