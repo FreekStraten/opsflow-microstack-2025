@@ -1,3 +1,4 @@
+
 name: Bunnyshell - Deploy Preview Environment
 
 on:
@@ -16,7 +17,7 @@ jobs:
     with:
       project-id: ${{ vars.BUNNYSHELL_PROJECT_ID }}
       cluster-id: ${{ vars.BUNNYSHELL_CLUSTER_ID }}
-      bunnyshell-yaml-path: .bunnyshell/bunnyshell.yml
+      bunnyshell-yaml-path: .bunnyshell/bunnyshell.yaml 
       pr-number: ${{ github.event.number }}
       comment-on-pr: true
       allowed-users: "*"
