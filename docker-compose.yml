@@ -12,7 +12,7 @@ services:
       dockerfile: Dockerfile.prod
     container_name: mijn-api
     ports:
-      - "80:12345"  # Changed to port 80 for Bunnyshell
+      - "3000:12345"  # API on port 3000 locally
     environment:
       MONGO_URL: mongodb://mijn-mongo:27017
       PORT: 12345
@@ -24,10 +24,10 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: frontend/Dockerfile  # Now with capital D
+      dockerfile: Dockerfile
     container_name: mijn-frontend
     ports:
-      - "80:80"  # Changed to port 80 for Bunnyshell
+      - "80:80"  # Frontend on port 80
     depends_on:
       - api
     restart: unless-stopped
