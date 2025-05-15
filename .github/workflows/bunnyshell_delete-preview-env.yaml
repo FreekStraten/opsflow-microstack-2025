@@ -1,3 +1,4 @@
+# .github/workflows/delete-preview-environment.yaml
 name: Delete preview environment
 
 on:
@@ -8,11 +9,11 @@ jobs:
   delete:
     uses: bunnyshell/workflows-reusable/.github/workflows/delete-env.yml@v2
     permissions:
-      pull-requests: write
+      pull-requests: write # Nodig als je commentaar wilt bijwerken/plaatsen, anders mogelijk niet nodig
     with:
       project-id: ${{ vars.BUNNYSHELL_PROJECT_ID }}
       pr-number: ${{ github.event.number }}
-      comment-on-pr: true
+      comment-on-pr: true # Of false indien niet gewenst bij verwijderen
       allowed-users: '*'
     secrets:
       bunnyshell-access-token: ${{ secrets.BUNNYSHELL_ACCESS_TOKEN }}
