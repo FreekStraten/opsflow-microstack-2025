@@ -1,4 +1,4 @@
-name: Bunnyshell - Delete Preview Environment #Hi
+name: Bunnyshell - Delete Preview Environment
 
 on:
   pull_request:
@@ -6,15 +6,10 @@ on:
 
 jobs:
   delete-preview:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Delete Preview Environment
-        uses: bunnyshell/workflows/.github/workflows/delete-env.yaml@v2
-        with:
-          bunnyshell-access-token: ${{ secrets.BUNNYSHELL_ACCESS_TOKEN }}
-          bunnyshell-project-id: ${{ vars.BUNNYSHELL_PROJECT_ID }}
-          bunnyshell-cluster-id: ${{ vars.BUNNYSHELL_CLUSTER_ID }}
-          bunnyshell-yaml-path: .bunnyshell/bunnyshell.yaml
+    uses: bunnyshell/workflows/.github/workflows/delete-env.yaml@main
+    with:
+      project-id: ${{ vars.BUNNYSHELL_PROJECT_ID }}
+      pr-number: ${{ github.event.number }}
+      comment-on-pr: true
+    secrets:
+      bunnyshell-access-token: ${{ secrets.BUNNYSHELL_ACCESS_TOKEN }}

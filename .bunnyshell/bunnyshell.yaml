@@ -1,6 +1,6 @@
 kind: Environment
 name: "preview"
-type: primary
+type: ephemeral  # Dit moet ephemeral zijn voor preview environments
 environmentVariables:
   DemoVarDefinedInBunnyshell: demo-value
 urlHandle: preview-devops-freek
@@ -22,7 +22,7 @@ components:
     dockerCompose:
       environment:
         PORT: 12345
-        MONGO_URL: 'mongodb://mijn-mongo:27017'
+        MONGO_URL: 'mongodb://mongodb:27017'  # Gebruik de service naam 'mongodb'
         DB_NAME: myapp
       build:
         context: .
