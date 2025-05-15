@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   deploy-preview:
-    uses: bunnyshell/workflows/.github/workflows/deploy-env.yaml@v2
+    uses: bunnyshell/workflows/.github/workflows/deploy-env.yaml@v1
     with:
       project-id: ${{ vars.BUNNYSHELL_PROJECT_ID }}
       cluster-id: ${{ vars.BUNNYSHELL_CLUSTER_ID }}
