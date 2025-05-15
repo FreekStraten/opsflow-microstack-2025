@@ -1,3 +1,4 @@
+
 name: Bunnyshell - Deploy Preview Environment
 
 on:
@@ -18,58 +19,6 @@ jobs:
       cluster-id: ${{ vars.BUNNYSHELL_CLUSTER_ID }}
       pr-number: ${{ github.event.number }}
       comment-on-pr: true
-      bunnyshell-yaml-content: |
-        kind: Environment
-        name: "preview-${{ github.event.number }}"
-        type: ephemeral
-        environmentVariables:
-          DemoVarDefinedInBunnyshell: demo-value
-        urlHandle: preview-devops-freek-${{ github.event.number }}
-        components:
-          - name: mongodb
-            kind: Service
-            dockerCompose:
-              image: 'mongo:latest'
-              restart: unless-stopped
-              volumes:
-                - './data:/data/db'
-            ports:
-              - port: 27017
-                name: mongo
-                protocol: TCP
-
-          - name: api
-            kind: Service
-            dockerCompose:
-              environment:
-                PORT: 12345
-                MONGO_URL: 'mongodb://mongodb:27017'
-                DB_NAME: myapp
-              build:
-                context: .
-                dockerfile: Dockerfile.prod
-              depends_on:
-                - mongodb
-              restart: unless-stopped
-            ports:
-              - port: 12345
-                name: api
-                protocol: TCP
-                public: true
-
-          - name: frontend
-            kind: Service
-            dockerCompose:
-              build:
-                context: ./frontend
-                dockerfile: Dockerfile
-              depends_on:
-                - api
-              restart: unless-stopped
-            ports:
-              - port: 80
-                name: frontend
-                protocol: TCP
-                public: true
+      bunnyshell-yaml-path: '.bunnyshell/bunnyshell.yaml'
     secrets:
       bunnyshell-access-token: ${{ secrets.BUNNYSHELL_ACCESS_TOKEN }}
