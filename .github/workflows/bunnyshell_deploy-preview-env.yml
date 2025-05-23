@@ -11,50 +11,65 @@ permissions:
   actions: read
 
 jobs:
-  # Add a simple test job first
-  test-trigger:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Test Trigger
-        run: |
-          echo "Deploy workflow triggered successfully!"
-          echo "PR Number: ${{ github.event.number }}"
-          echo "Event Action: ${{ github.event.action }}"
-
   deploy-preview:
-    runs-on: ubuntu-latest
-    needs: test-trigger
-    # Add condition to ensure required vars exist
-    if: ${{ vars.BUNNYSHELL_PROJECT_ID != '' && vars.BUNNYSHELL_CLUSTER_ID != '' && secrets.BUNNYSHELL_ACCESS_TOKEN != '' }}
+    uses: bunnyshell/workflows/.github/workflows/deploy-env.yaml@v2
+    with:
+      project-id: ${{ vars.BUNNYSHELL_PROJECT_ID }}
+      cluster-id: ${{ vars.BUNNYSHELL_CLUSTER_ID }}
+      pr-number: ${{ github.event.number }}
+      comment-on-pr: true
+      bunnyshell-yaml-content: |
+        kind: Environment
+        name: "preview-${{ github.event.number }}"
+        type: ephemeral
+        environmentVariables:
+          DemoVarDefinedInBunnyshell: demo-value
+        urlHandle: preview-devops-freek-${{ github.event.number }}
+        components:
+          - name: mongodb
+            kind: Service
+            dockerCompose:
+              image: 'mongo:latest'
+              restart: unless-stopped
+              volumes:
+                - './data:/data/db'
+            ports:
+              - port: 27017
+                name: mongo
+                protocol: TCP
 
-    steps:
-      - name: Deploy with Bunnyshell
-        uses: bunnyshell/cli@v2
-        with:
-          project-id: ${{ vars.BUNNYSHELL_PROJECT_ID }}
-          cluster-id: ${{ vars.BUNNYSHELL_CLUSTER_ID }}
-          pr-number: ${{ github.event.number }}
-          comment-on-pr: true
-          bunnyshell-yaml-path: '.bunnyshell/bunnyshell.yaml'
-          access-token: ${{ secrets.BUNNYSHELL_ACCESS_TOKEN }}
+          - name: api
+            kind: Service
+            dockerCompose:
+              environment:
+                PORT: 12345
+                MONGO_URL: 'mongodb://mongodb:27017'
+                DB_NAME: myapp
+              build:
+                context: .
+                dockerfile: Dockerfile.prod
+              depends_on:
+                - mongodb
+              restart: unless-stopped
+            ports:
+              - port: 12345
+                name: api
+                protocol: TCP
+                public: true
 
-  # Alternative: Use the reusable workflow but with better error handling
-  deploy-preview-alternative:
-    runs-on: ubuntu-latest
-    needs: test-trigger
-    if: ${{ failure() }} # Only run if the above fails
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Deploy Preview Environment
-        uses: bunnyshell/workflows/.github/workflows/deploy-env.yaml@v2
-        with:
-          project-id: ${{ vars.BUNNYSHELL_PROJECT_ID }}
-          cluster-id: ${{ vars.BUNNYSHELL_CLUSTER_ID }}
-          pr-number: ${{ github.event.number }}
-          comment-on-pr: true
-          bunnyshell-yaml-path: '.bunnyshell/bunnyshell.yaml'
-        secrets:
-          bunnyshell-access-token: ${{ secrets.BUNNYSHELL_ACCESS_TOKEN }}
+          - name: frontend
+            kind: Service
+            dockerCompose:
+              build:
+                context: ./frontend
+                dockerfile: Dockerfile
+              depends_on:
+                - api
+              restart: unless-stopped
+            ports:
+              - port: 80
+                name: frontend
+                protocol: TCP
+                public: true
+    secrets:
+      bunnyshell-access-token: ${{ secrets.BUNNYSHELL_ACCESS_TOKEN }}

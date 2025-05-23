@@ -1,18 +1,12 @@
-# Enhanced Debug Workflow
-
-Create a more comprehensive debug workflow to test the deploy trigger:
-
-  ```yaml
-name: Debug Deploy Workflow
+name: Debug Bunnyshell Setup
 
 on:
   pull_request:
     types: [opened, synchronize, reopened]
 
 jobs:
-  debug-deploy:
+  debug:
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -30,41 +24,12 @@ jobs:
           echo "BUNNYSHELL_PROJECT_ID exists: ${{ vars.BUNNYSHELL_PROJECT_ID != '' }}"
           echo "BUNNYSHELL_CLUSTER_ID exists: ${{ vars.BUNNYSHELL_CLUSTER_ID != '' }}"
           echo "BUNNYSHELL_ACCESS_TOKEN exists: ${{ secrets.BUNNYSHELL_ACCESS_TOKEN != '' }}"
-          
-          # Show values (masked for secrets)
-          echo "PROJECT_ID value: ${{ vars.BUNNYSHELL_PROJECT_ID }}"
-          echo "CLUSTER_ID value: ${{ vars.BUNNYSHELL_CLUSTER_ID }}"
 
-      - name: Test YAML Parsing
+      - name: Check bunnyshell.yaml
         run: |
-          cat << 'EOF' > test-config.yaml
-          kind: Environment
-          name: "preview-${{ github.event.number }}"
-          type: ephemeral
-          environmentVariables:
-            DemoVarDefinedInBunnyshell: demo-value
-          urlHandle: preview-devops-freek-${{ github.event.number }}
-          components:
-            - name: mongodb
-              kind: Service
-              dockerCompose:
-                image: 'mongo:latest'
-                restart: unless-stopped
-                volumes:
-                  - './data:/data/db'
-              ports:
-                - port: 27017
-                  name: mongo
-                  protocol: TCP
-          EOF
-          
-          echo "YAML file created successfully"
-          cat test-config.yaml
-
-      - name: Check Workflow Permissions
-        run: |
-          echo "Repository permissions:"
-          echo "GITHUB_TOKEN permissions: ${{ toJson(github.token) }}"
-  ```
-  
-  Save this as `.github/workflows/debug-deploy.yml` and create a PR to test it.
+          if [ -f ".bunnyshell/bunnyshell.yaml" ]; then
+            echo "bunnyshell.yaml found"
+            cat .bunnyshell/bunnyshell.yaml
+          else
+            echo "bunnyshell.yaml NOT found"
+          fi
