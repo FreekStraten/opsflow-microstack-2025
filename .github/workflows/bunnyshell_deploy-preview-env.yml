@@ -11,12 +11,13 @@ permissions:
 
 jobs:
   deploy-preview:
-    uses: bunnyshell/workflows/.github/workflows/deploy-env.yaml@v2
+    # Use the prepare-and-deploy workflow instead of deploy-env
+    uses: bunnyshell/workflows/.github/workflows/prepare-and-deploy-env.yaml@v2
     with:
       project-id: ${{ vars.BUNNYSHELL_PROJECT_ID }}
       cluster-id: ${{ vars.BUNNYSHELL_CLUSTER_ID }}
       pr-number: ${{ github.event.number }}
       comment-on-pr: true
-      # Only basic parameters - no YAML content or path
+      # This workflow should handle creating the environment
     secrets:
       bunnyshell-access-token: ${{ secrets.BUNNYSHELL_ACCESS_TOKEN }}
