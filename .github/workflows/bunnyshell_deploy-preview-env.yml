@@ -11,15 +11,63 @@ permissions:
 
 jobs:
   deploy-preview:
-    uses: bunnyshell/workflows/.github/workflows/prepare-and-deploy-env.yaml@v2
+    uses: bunnyshell/workflows/.github/workflows/deploy-env.yaml@v2
     with:
       project-id: ${{ vars.BUNNYSHELL_PROJECT_ID }}
-      cluster-id: ${{ vars.BUNNYSHELL_CLUSTER_ID }}
       pr-number: ${{ github.event.number }}
       comment-on-pr: true
-      git-ref: ${{ github.event.pull_request.head.sha }}
-      # Alternative options for git-ref:
-      # git-ref: ${{ github.event.pull_request.head.ref }}  # branch name
-      # git-ref: ${{ github.sha }}  # current commit
+      allowed-users: "*"
+      # Using embedded content to avoid formatting issues
+      bunnyshell-yaml-contents: |
+        kind: Environment
+        name: "preview-${PR_NUMBER:-main}"
+        type: ephemeral
+        environmentVariables:
+          DemoVarDefinedInBunnyshell: demo-value
+        urlHandle: preview-devops-freek-${PR_NUMBER:-main}
+        components:
+          - name: mongodb
+            kind: Service
+            dockerCompose:
+              image: 'mongo:latest'
+              restart: unless-stopped
+              volumes:
+                - './data:/data/db'
+            ports:
+              - port: 27017
+                name: mongo
+                protocol: TCP
+          - name: api
+            kind: Service
+            dockerCompose:
+              environment:
+                PORT: 12345
+                MONGO_URL: 'mongodb://mongodb:27017'
+                DB_NAME: myapp
+              build:
+                context: .
+                dockerfile: Dockerfile.prod
+              depends_on:
+                - mongodb
+              restart: unless-stopped
+            ports:
+              - port: 12345
+                name: api
+                protocol: TCP
+                public: true
+          - name: frontend
+            kind: Service
+            dockerCompose:
+              build:
+                context: ./frontend
+                dockerfile: Dockerfile
+              depends_on:
+                - api
+              restart: unless-stopped
+            ports:
+              - port: 80
+                name: frontend
+                protocol: TCP
+                public: true
     secrets:
       bunnyshell-access-token: ${{ secrets.BUNNYSHELL_ACCESS_TOKEN }}
