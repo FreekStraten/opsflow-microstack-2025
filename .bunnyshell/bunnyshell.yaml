@@ -1,9 +1,9 @@
 kind: Environment
-name: "preview-{{ GITHUB_PR_NUMBER }}"
+name: "preview-${PR_NUMBER:-main}"
 type: ephemeral
 environmentVariables:
   DemoVarDefinedInBunnyshell: demo-value
-urlHandle: preview-devops-freek-{{ GITHUB_PR_NUMBER }}
+urlHandle: preview-devops-freek-${PR_NUMBER:-main}
 components:
   - name: mongodb
     kind: Service
