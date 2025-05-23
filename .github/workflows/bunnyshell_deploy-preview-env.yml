@@ -7,14 +7,68 @@ on:
 permissions:
   contents: read
   pull-requests: write
-  checks: write
 
 jobs:
   deploy-preview:
-    uses: bunnyshell/workflows/.github/workflows/deploy-env.yaml@v2
-    with:
-      project-id: ${{ vars.BUNNYSHELL_PROJECT_ID }}
-      cluster-id: ${{ vars.BUNNYSHELL_CLUSTER_ID }}
-      pr-number: ${{ github.event.number }}
-    secrets:
-      bunnyshell-access-token: ${{ secrets.BUNNYSHELL_ACCESS_TOKEN }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bunnyshell CLI
+        run: |
+          curl -sL https://github.com/bunnyshell/cli/releases/latest/download/bns-linux-amd64 -o bns
+          chmod +x bns
+          sudo mv bns /usr/local/bin/
+
+      - name: Prepare Environment Configuration
+        run: |
+          # Create a PR-specific version of the bunnyshell.yaml
+          cp .bunnyshell/bunnyshell.yaml bunnyshell-pr.yaml
+          
+          # Update the name and URL handle to be unique for this PR
+          sed -i 's/name: "preview"/name: "preview-pr-${{ github.event.number }}"/g' bunnyshell-pr.yaml
+          sed -i 's/urlHandle: preview-devops-freek/urlHandle: preview-devops-freek-pr-${{ github.event.number }}/g' bunnyshell-pr.yaml
+          
+          echo "=== Environment Configuration ==="
+          cat bunnyshell-pr.yaml
+
+      - name: Deploy to Bunnyshell
+        env:
+          BUNNYSHELL_TOKEN: ${{ secrets.BUNNYSHELL_ACCESS_TOKEN }}
+        run: |
+          echo "Deploying environment for PR #${{ github.event.number }}"
+          
+          # Deploy the environment
+          bns environment deploy \
+            --definition bunnyshell-pr.yaml \
+            --project ${{ vars.BUNNYSHELL_PROJECT_ID }} \
+            --cluster ${{ vars.BUNNYSHELL_CLUSTER_ID }} \
+            --no-progress
+
+      - name: Get Environment Status
+        env:
+          BUNNYSHELL_TOKEN: ${{ secrets.BUNNYSHELL_ACCESS_TOKEN }}
+        run: |
+          echo "Getting environment status..."
+          bns environment list --project ${{ vars.BUNNYSHELL_PROJECT_ID }} --output json
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const comment = `🚀 **Preview Environment Deployed**
+            
+            **Environment:** \`preview-pr-${{ github.event.number }}\`
+            **Status:** Deploying...
+            
+            Your preview environment is being created. Check the [Bunnyshell dashboard](https://environments.bunnyshell.com/) for deployment progress.
+            
+            This environment will be automatically deleted when the PR is closed.`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
