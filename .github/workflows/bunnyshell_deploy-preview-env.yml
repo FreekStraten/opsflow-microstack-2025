@@ -17,9 +17,14 @@ jobs:
 
       - name: Setup Bunnyshell CLI
         run: |
-          curl -sL https://github.com/bunnyshell/cli/releases/latest/download/bns-linux-amd64 -o bns
+          # Download latest Bunnyshell CLI
+          curl -L -o bns "https://github.com/bunnyshell/cli/releases/latest/download/bns-linux-amd64"
           chmod +x bns
           sudo mv bns /usr/local/bin/
+          
+          # Verify installation
+          which bns
+          bns version
 
       - name: Prepare Environment Configuration
         run: |
