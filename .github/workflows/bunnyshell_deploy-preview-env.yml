@@ -1,5 +1,5 @@
-
-name: Bunnyshell - Deploy Preview Environment
+# Alternative: Direct implementation without external workflow
+name: Bunnyshell - Deploy Preview Environment (Direct)
 
 on:
   pull_request:
@@ -9,16 +9,46 @@ permissions:
   contents: read
   pull-requests: write
   checks: write
-  actions: read
 
 jobs:
   deploy-preview:
-    uses: bunnyshell/workflows/.github/workflows/deploy-env.yaml@v2
-    with:
-      project-id: ${{ vars.BUNNYSHELL_PROJECT_ID }}
-      cluster-id: ${{ vars.BUNNYSHELL_CLUSTER_ID }}
-      pr-number: ${{ github.event.number }}
-      comment-on-pr: true
-      bunnyshell-yaml-path: '.bunnyshell/bunnyshell.yaml'
-    secrets:
-      bunnyshell-access-token: ${{ secrets.BUNNYSHELL_ACCESS_TOKEN }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Bunnyshell CLI
+        run: |
+          curl -L https://github.com/bunnyshell/cli/releases/latest/download/bns-linux-amd64 -o bns
+          chmod +x bns
+          sudo mv bns /usr/local/bin/
+
+      - name: Configure Bunnyshell CLI
+        env:
+          BUNNYSHELL_ACCESS_TOKEN: ${{ secrets.BUNNYSHELL_ACCESS_TOKEN }}
+        run: |
+          bns configure --token $BUNNYSHELL_ACCESS_TOKEN
+
+      - name: Create preview environment config
+        run: |
+          # Create a dynamic config for this PR
+          sed "s/preview-devops-freek/preview-devops-freek-${{ github.event.number }}/g" .bunnyshell/bunnyshell.yaml > preview-config.yaml
+          sed -i "s/name: \"preview\"/name: \"preview-${{ github.event.number }}\"/g" preview-config.yaml
+
+      - name: Deploy preview environment
+        run: |
+          bns environments deploy \
+            --config preview-config.yaml \
+            --project ${{ vars.BUNNYSHELL_PROJECT_ID }} \
+            --cluster ${{ vars.BUNNYSHELL_CLUSTER_ID }}
+
+      - name: Comment PR with environment info
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '🚀 Preview environment deployed! PR #${{ github.event.number }}'
+            })
