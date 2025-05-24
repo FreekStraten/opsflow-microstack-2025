@@ -4,20 +4,62 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+# Deze permissions zijn essentieel!
 permissions:
-  contents: read
-  pull-requests: write
-  checks: write
+  contents: read          # Basis lees rechten
+  pull-requests: write    # Nodig om comments te plaatsen op PR's
+  issues: write          # Nodig omdat PR comments via de issues API gaan
 
 jobs:
   deploy-preview:
-    # Use the prepare-and-deploy workflow instead of deploy-env
-    uses: bunnyshell/workflows/.github/workflows/prepare-and-deploy-env.yaml@v2
-    with:
-      project-id: ${{ vars.BUNNYSHELL_PROJECT_ID }}
-      cluster-id: ${{ vars.BUNNYSHELL_CLUSTER_ID }}
-      pr-number: ${{ github.event.number }}
-      comment-on-pr: true
-      # This workflow should handle creating the environment
-    secrets:
-      bunnyshell-access-token: ${{ secrets.BUNNYSHELL_ACCESS_TOKEN }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Comment on PR - Deployment Started
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🚀 **Bunnyshell Preview Environment**
+            
+              Deployment initiated for PR #${{ github.event.number }}
+              - Branch: \`${{ github.event.pull_request.head.ref }}\`
+              - Commit: \`${{ github.event.pull_request.head.sha }}\`
+            
+              _Note: This is a mock deployment for demonstration purposes._`
+            })
+
+      - name: Mock Deployment Process
+        run: |
+          echo "=== Simulating Bunnyshell Deployment ==="
+          echo "PR Number: ${{ github.event.number }}"
+          echo "Repository: ${{ github.repository }}"
+          echo "Branch: ${{ github.event.pull_request.head.ref }}"
+          echo "Commit: ${{ github.event.pull_request.head.sha }}"
+          echo ""
+          echo "🔄 Simulating deployment steps..."
+          sleep 5
+          echo "✅ Mock deployment completed successfully!"
+          echo "=================================="
+
+      - name: Comment on PR - Deployment Complete
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `✅ **Preview Environment Ready!**
+            
+              Your preview environment has been successfully deployed.
+            
+              🔗 Preview URL: \`https://preview-devops-freek-${{ github.event.number }}.example.com\`
+            
+              _Note: This is a mock deployment. In a real scenario, this would contain actual deployment URLs from Bunnyshell._`
+            })
