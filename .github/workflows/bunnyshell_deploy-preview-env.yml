@@ -14,9 +14,9 @@ jobs:
     uses: bunnyshell/workflows/.github/workflows/deploy-env.yaml@v2
     with:
       project-id: ${{ vars.BUNNYSHELL_PROJECT_ID }}
+      cluster-id: ${{ vars.BUNNYSHELL_CLUSTER_ID }}
       pr-number: ${{ github.event.number }}
       comment-on-pr: true
-      allowed-users: "*"
       # Using embedded content to avoid formatting issues
       bunnyshell-yaml-contents: |
         kind: Environment
