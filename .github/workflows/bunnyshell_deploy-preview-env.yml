@@ -26,11 +26,11 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: `🚀 **Bunnyshell Preview Environment**
-            
+              
               Deployment initiated for PR #${{ github.event.number }}
               - Branch: \`${{ github.event.pull_request.head.ref }}\`
               - Commit: \`${{ github.event.pull_request.head.sha }}\`
-            
+              
               _Note: This is a mock deployment for demonstration purposes._`
             })
 
@@ -56,10 +56,10 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: `✅ **Preview Environment Ready!**
-            
+              
               Your preview environment has been successfully deployed.
-            
+              
               🔗 Preview URL: \`https://preview-devops-freek-${{ github.event.number }}.example.com\`
-            
+              
               _Note: This is a mock deployment. In a real scenario, this would contain actual deployment URLs from Bunnyshell._`
             })
