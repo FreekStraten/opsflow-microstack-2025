@@ -7,17 +7,164 @@ on:
 permissions:
   contents: read
   pull-requests: write
-  checks: write
 
 jobs:
   deploy-preview:
-    uses: bunnyshell/workflows/.github/workflows/prepare-and-deploy-env.yaml@v2
-    with:
-      project-id: ${{ vars.BUNNYSHELL_PROJECT_ID }}
-      cluster-id: ${{ vars.BUNNYSHELL_CLUSTER_ID }}
-      pr-number: ${{ github.event.number }}
-      comment-on-pr: true
-      git-ref: ${{ github.event.pull_request.head.sha }}
-      bunnyshell-yaml-path: .bunnyshell/bunnyshell.yaml
-    secrets:
-      bunnyshell-access-token: ${{ secrets.BUNNYSHELL_ACCESS_TOKEN }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Install Bunnyshell CLI
+        run: |
+          curl -L https://github.com/bunnyshell/cli/releases/latest/download/bns-linux-amd64 -o bns
+          chmod +x bns
+          ./bns --version
+
+      - name: Check for existing environment
+        id: check-env
+        run: |
+          ENV_NAME="preview-pr-${{ github.event.number }}"
+          echo "Checking for environment: $ENV_NAME"
+          
+          # List environments and check if one exists for this PR
+          ENV_DATA=$(./bns environments list \
+            --access-token "${{ secrets.BUNNYSHELL_ACCESS_TOKEN }}" \
+            --project "${{ vars.BUNNYSHELL_PROJECT_ID }}" \
+            --output json | jq -r ".[] | select(.name == \"$ENV_NAME\")")
+          
+          if [ -z "$ENV_DATA" ]; then
+            echo "Environment does not exist"
+            echo "exists=false" >> $GITHUB_OUTPUT
+          else
+            ENV_ID=$(echo "$ENV_DATA" | jq -r '.id')
+            echo "Environment exists with ID: $ENV_ID"
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "env_id=$ENV_ID" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create environment if needed
+        id: create-env
+        if: steps.check-env.outputs.exists == 'false'
+        run: |
+          ENV_NAME="preview-pr-${{ github.event.number }}"
+          
+          echo "Creating new environment: $ENV_NAME"
+          
+          # Create the environment using the YAML file
+          ENV_DATA=$(./bns environments create \
+            --access-token "${{ secrets.BUNNYSHELL_ACCESS_TOKEN }}" \
+            --name "$ENV_NAME" \
+            --type ephemeral \
+            --from-path .bunnyshell/bunnyshell.yaml \
+            --k8s "${{ vars.BUNNYSHELL_CLUSTER_ID }}" \
+            --project "${{ vars.BUNNYSHELL_PROJECT_ID }}" \
+            --label "pr=${{ github.event.number }}" \
+            --label "repo=${{ github.repository }}" \
+            --var "PR_NUMBER=${{ github.event.number }}" \
+            --output json)
+          
+          ENV_ID=$(echo "$ENV_DATA" | jq -r '.id')
+          echo "Created environment with ID: $ENV_ID"
+          echo "env_id=$ENV_ID" >> $GITHUB_OUTPUT
+
+      - name: Set environment ID
+        id: set-env-id
+        run: |
+          if [ "${{ steps.check-env.outputs.exists }}" == "true" ]; then
+            echo "env_id=${{ steps.check-env.outputs.env_id }}" >> $GITHUB_OUTPUT
+          else
+            echo "env_id=${{ steps.create-env.outputs.env_id }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Deploy environment
+        run: |
+          ENV_ID="${{ steps.set-env-id.outputs.env_id }}"
+          echo "Deploying environment: $ENV_ID"
+          
+          # Deploy the environment
+          ./bns environments deploy \
+            --access-token "${{ secrets.BUNNYSHELL_ACCESS_TOKEN }}" \
+            --id "$ENV_ID"
+
+      - name: Wait for deployment
+        run: |
+          ENV_ID="${{ steps.set-env-id.outputs.env_id }}"
+          echo "Waiting for deployment to complete..."
+          
+          # Wait for the environment to be ready (max 10 minutes)
+          TIMEOUT=600
+          ELAPSED=0
+          INTERVAL=10
+          
+          while [ $ELAPSED -lt $TIMEOUT ]; do
+            STATUS=$(./bns environments show \
+              --access-token "${{ secrets.BUNNYSHELL_ACCESS_TOKEN }}" \
+              --id "$ENV_ID" \
+              --output json | jq -r '.status')
+          
+            echo "Environment status: $STATUS"
+          
+            if [ "$STATUS" == "running" ]; then
+              echo "Deployment complete!"
+              break
+            elif [ "$STATUS" == "deployment_failed" ] || [ "$STATUS" == "error" ]; then
+              echo "Deployment failed!"
+              exit 1
+            fi
+          
+            sleep $INTERVAL
+            ELAPSED=$((ELAPSED + INTERVAL))
+          done
+
+      - name: Get environment URLs
+        id: get-urls
+        run: |
+          ENV_ID="${{ steps.set-env-id.outputs.env_id }}"
+          
+          # Get environment details
+          ENV_DATA=$(./bns environments show \
+            --access-token "${{ secrets.BUNNYSHELL_ACCESS_TOKEN }}" \
+            --id "$ENV_ID" \
+            --output json)
+          
+          # Extract component URLs
+          URLS=$(echo "$ENV_DATA" | jq -r '.components[]?.publicURL // empty' | grep -v '^$' || true)
+          
+          if [ -z "$URLS" ]; then
+            echo "No public URLs found"
+            echo "urls=" >> $GITHUB_OUTPUT
+          else
+            echo "Found URLs:"
+            echo "$URLS"
+            # Format URLs for GitHub output (multiline)
+            echo "urls<<EOF" >> $GITHUB_OUTPUT
+            echo "$URLS" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Comment on PR
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const urls = `${{ steps.get-urls.outputs.urls }}`.trim().split('\n').filter(Boolean);
+            let body = '🚀 **Bunnyshell Preview Environment Ready!**\n\n';
+            
+            if (urls.length > 0) {
+              body += '**Preview URLs:**\n';
+              urls.forEach(url => {
+                body += `- ${url}\n`;
+              });
+            } else {
+              body += '_No public URLs available for this environment._\n';
+            }
+            
+            body += '\n---\n';
+            body += `Environment: \`preview-pr-${{ github.event.number }}\``;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
