@@ -51,7 +51,7 @@ services:
 
   grafana:
     build:
-      context: ./grafana
+      context: monitoring/grafana
       dockerfile: Dockerfile
     container_name: grafana
     ports:
