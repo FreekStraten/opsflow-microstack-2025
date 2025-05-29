@@ -44,7 +44,7 @@ services:
     container_name: prometheus
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-      - ./monitoring/prometheus/alerts/service-alerts.yml:/etc/prometheus/alerts/service-alerts.yml
+      - ./monitoring/prometheus/alerts:/etc/prometheus/alerts  # Mount the entire alerts directory
     ports:
       - "9090:9090"
     restart: unless-stopped
@@ -61,14 +61,14 @@ services:
     restart: unless-stopped
 
   alertmanager:
-    image: prom/alertmanager:latest
+    build:
+      context: monitoring/alertmanager
+      dockerfile: Dockerfile
     container_name: alertmanager
-    volumes:
-      - ./monitoring/alertmanager/alertmanager.template.yml:/etc/alertmanager/alertmanager.template.yml
-      - ./monitoring/alertmanager/scripts/start-alertmanager.sh:/start-alertmanager.sh
     env_file:
       - ./.env.monitoring
-    entrypoint: [ "/start-alertmanager.sh" ]
     ports:
       - "9093:9093"
     restart: unless-stopped
+    depends_on:
+      - prometheus

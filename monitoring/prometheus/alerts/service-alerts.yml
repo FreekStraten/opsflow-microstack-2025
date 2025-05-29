@@ -1,11 +1,46 @@
 groups:
   - name: services
     rules:
+      # Original rule - fires when scrape fails (with longer for period)
       - alert: ServiceDown
         expr: up == 0
-        for: 15s  # Reduced from 30s
+        for: 1m  # Changed to 1 minute for easier testing
         labels:
           severity: critical
         annotations:
           summary: "Service {{ $labels.job }} is down"
-          description: "Service {{ $labels.job }} has been down for more than 15 seconds."
+          description: "Service {{ $labels.job }} on {{ $labels.instance }} has been down for more than 1 minute."
+
+      # Alternative rule - fires when target disappears completely
+      - alert: ServiceMissing
+        expr: absent(up{job="api"})
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "API service has disappeared"
+          description: "The API service target has completely disappeared from monitoring."
+
+      # Another alternative - fires when MongoDB disappears
+      - alert: MongoDBMissing
+        expr: absent(up{job="mongodb"})
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "MongoDB service has disappeared"
+          description: "The MongoDB service target has completely disappeared from monitoring."
+
+      # More comprehensive rule - checks if any expected service is missing
+      - alert: ExpectedServiceMissing
+        expr: |
+          (
+            absent(up{job="api"}) or
+            absent(up{job="mongodb"})
+          )
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Expected service is missing"
+          description: "One or more expected services (api, mongodb) are not being scraped."
