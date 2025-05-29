@@ -1,8 +1,9 @@
 global:
   smtp_smarthost: 'smtp.sendgrid.net:587'
-  smtp_from: 'freekstraten@gmail.com'
+  smtp_from: 'freekstratenn@gmail.com'
   smtp_auth_username: 'apikey'
   smtp_auth_password: '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'
+  smtp_require_tls: true
 
 route:
   group_by: ['alertname']
@@ -14,12 +15,24 @@ route:
 receivers:
   - name: 'email-notifications'
     email_configs:
-      - to: 'freekstraten@gmail.com'
-        subject: 'DevOps Alert: {{ .GroupLabels.alertname }}'
-        body: |
+      - to: 'freekstratenn@gmail.com'
+        headers:
+          Subject: 'DevOps Alert: {{ .GroupLabels.alertname }}'
+        html: |
+          <h2>Alert Details</h2>
+          {{ range .Alerts }}
+          <p><strong>Alert:</strong> {{ .Annotations.summary }}</p>
+          <p><strong>Description:</strong> {{ .Annotations.description }}</p>
+          <p><strong>Status:</strong> {{ .Status }}</p>
+          <p><strong>Started:</strong> {{ .StartsAt }}</p>
+          <hr>
+          {{ end }}
+        text: |
           {{ range .Alerts }}
           Alert: {{ .Annotations.summary }}
           Description: {{ .Annotations.description }}
           Status: {{ .Status }}
           Started: {{ .StartsAt }}
+          ---
           {{ end }}
+        send_resolved: true
