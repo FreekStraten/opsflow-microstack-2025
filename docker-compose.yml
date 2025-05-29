@@ -31,3 +31,20 @@ services:
     depends_on:
       - api
     restart: unless-stopped
+
+  db-exporter:
+    image: bitnami/mongodb-exporter:latest
+    container_name: mongo-exporter
+    environment:
+      - MONGODB_URI=mongodb://mijn-mongo:27017
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"  # On dev
+      # - "80:9090"  # On production
+    restart: unless-stopped
