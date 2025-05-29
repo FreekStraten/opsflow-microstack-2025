@@ -44,7 +44,7 @@ services:
     container_name: prometheus
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-      - ./monitoring/prometheus/alerts/service-alerts.yml:/etc/prometheus/service-alerts.yml
+      - ./monitoring/prometheus/alerts/service-alerts.yml:/etc/prometheus/alerts/service-alerts.yml
     ports:
       - "9090:9090"
     restart: unless-stopped
@@ -64,9 +64,11 @@ services:
     image: prom/alertmanager:latest
     container_name: alertmanager
     volumes:
-      - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - ./monitoring/alertmanager/alertmanager.template.yml:/etc/alertmanager/alertmanager.template.yml
+      - ./monitoring/alertmanager/scripts/start-alertmanager.sh:/start-alertmanager.sh
     env_file:
       - ./.env.monitoring
+    entrypoint: [ "/start-alertmanager.sh" ]
     ports:
       - "9093:9093"
     restart: unless-stopped

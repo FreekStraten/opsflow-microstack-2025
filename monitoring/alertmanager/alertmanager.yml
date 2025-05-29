@@ -6,8 +6,8 @@ global:
 
 route:
   group_by: ['alertname']
-  group_wait: 30s
-  group_interval: 5m
+  group_wait: 10s
+  group_interval: 1m
   repeat_interval: 3h
   receiver: 'email-notifications'
 
@@ -15,4 +15,10 @@ receivers:
   - name: 'email-notifications'
     email_configs:
       - to: '${ALERT_EMAIL_TO}'
+        subject: 'Alert: {{ .GroupLabels.alertname }}'
+        body: |
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          {{ end }}
         send_resolved: true
