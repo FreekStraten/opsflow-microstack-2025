@@ -23,4 +23,3 @@ receivers:
           Status: {{ .Status }}
           Started: {{ .StartsAt }}
           {{ end }}
-        send_resolved: true
