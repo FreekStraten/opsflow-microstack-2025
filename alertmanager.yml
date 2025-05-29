@@ -1,8 +1,8 @@
 global:
   smtp_smarthost: 'smtp.sendgrid.net:587'
-  smtp_from: 'your-email@example.com'
+  smtp_from: 'freekstratenn@gmail.com'
   smtp_auth_username: 'apikey'
-  smtp_auth_password: 'your-sendgrid-api-key'
+  smtp_auth_password: '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'
 
 route:
   group_by: ['alertname']
@@ -14,5 +14,5 @@ route:
 receivers:
   - name: 'email-notifications'
     email_configs:
-      - to: 'your-email@example.com'
+      - to: 'freekstratenn@gmail.com'
         send_resolved: true
