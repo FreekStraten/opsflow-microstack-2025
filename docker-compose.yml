@@ -67,13 +67,6 @@ services:
       - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
     env_file:
       - ./.env.monitoring
-    environment:
-      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
-      - ALERT_EMAIL_FROM=${ALERT_EMAIL_FROM}
-      - ALERT_EMAIL_TO=${ALERT_EMAIL_TO}
     ports:
       - "9093:9093"
     restart: unless-stopped
-    command:
-      - '--config.file=/etc/alertmanager/alertmanager.yml'
-      - '--env.file=/etc/alertmanager/env'

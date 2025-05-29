@@ -4,30 +4,28 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
-// Import prometheus bundle
+// Import prometheus bundle for metrics
 const promBundle = require('express-prom-bundle');
+
+// Create the metricsMiddleware (simpler approach)
 const metricsMiddleware = promBundle({
     includeMethod: true,
     includePath: true,
     includeStatusCode: true,
     includeUp: true,
-    promClient: {
-        collectDefaultMetrics: {
-            timeout: 5000
-        }
-    }
+    metricsPath: '/metrics'
 });
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 
-// Database connectie
+// Database connection
 const { connectToDatabase } = require('./services/database');
 
-// Create the app FIRST, then use middleware
+// Create the Express app
 var app = express();
 
-// Apply prometheus middleware (this should come early in the middleware chain)
+// Apply prometheus middleware BEFORE other middleware
 app.use(metricsMiddleware);
 
 // view engine setup
@@ -59,7 +57,7 @@ app.use(function(err, req, res, next) {
     res.render('error');
 });
 
-// Connecteer met database bij opstarten en initialiseer data
+// Connect to database on startup and initialize data
 connectToDatabase()
     .then(async () => {
         console.log('Database connected, checking for initial data...');
