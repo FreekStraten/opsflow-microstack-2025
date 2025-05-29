@@ -55,8 +55,7 @@ services:
       dockerfile: Dockerfile
     container_name: grafana
     ports:
-      - "3000:3000"  # On dev
-      # - "80:3000"  # On production (commented out for now)
+      - "3100:3000"  # Changed from 3000:3000
     depends_on:
       - prometheus
     restart: unless-stopped
