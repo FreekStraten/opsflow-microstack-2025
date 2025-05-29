@@ -64,9 +64,9 @@ services:
     image: prom/alertmanager:latest
     container_name: alertmanager
     volumes:
-      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
     env_file:
-      - ./.env
+      - ./.env.monitoring
     environment:
       - SENDGRID_API_KEY=${SENDGRID_API_KEY}
       - ALERT_EMAIL_FROM=${ALERT_EMAIL_FROM}
