@@ -1,0 +1,18 @@
+global:
+  smtp_smarthost: 'smtp.sendgrid.net:587'
+  smtp_from: 'your-email@example.com'
+  smtp_auth_username: 'apikey'
+  smtp_auth_password: 'your-sendgrid-api-key'
+
+route:
+  group_by: ['alertname']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 3h
+  receiver: 'email-notifications'
+
+receivers:
+  - name: 'email-notifications'
+    email_configs:
+      - to: 'your-email@example.com'
+        send_resolved: true

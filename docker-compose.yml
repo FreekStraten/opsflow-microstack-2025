@@ -44,9 +44,9 @@ services:
     container_name: prometheus
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus-alerts.yml:/etc/prometheus/prometheus-alerts.yml
     ports:
-      - "9090:9090"  # On dev
-      # - "80:9090"  # On production
+      - "9090:9090"
     restart: unless-stopped
 
   grafana:
@@ -59,3 +59,14 @@ services:
     depends_on:
       - prometheus
     restart: unless-stopped
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: alertmanager
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml
+    ports:
+      - "9093:9093"
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
