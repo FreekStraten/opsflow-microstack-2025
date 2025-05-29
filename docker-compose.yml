@@ -61,12 +61,10 @@ services:
     restart: unless-stopped
 
   alertmanager:
-    build:
-      context: monitoring/alertmanager
-      dockerfile: Dockerfile
+    image: prom/alertmanager:latest
     container_name: alertmanager
-    env_file:
-      - ./.env.monitoring
+    volumes:
+      - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
     ports:
       - "9093:9093"
     restart: unless-stopped

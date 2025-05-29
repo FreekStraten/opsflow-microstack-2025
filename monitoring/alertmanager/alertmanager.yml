@@ -1,8 +1,8 @@
 global:
   smtp_smarthost: 'smtp.sendgrid.net:587'
-  smtp_from: '${ALERT_EMAIL_FROM}'
+  smtp_from: 'freekstraten@gmail.com'
   smtp_auth_username: 'apikey'
-  smtp_auth_password: '${SENDGRID_API_KEY}'
+  smtp_auth_password: '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'
 
 route:
   group_by: ['alertname']
@@ -14,11 +14,13 @@ route:
 receivers:
   - name: 'email-notifications'
     email_configs:
-      - to: '${ALERT_EMAIL_TO}'
-        subject: 'Alert: {{ .GroupLabels.alertname }}'
+      - to: 'freekstraten@gmail.com'
+        subject: 'DevOps Alert: {{ .GroupLabels.alertname }}'
         body: |
           {{ range .Alerts }}
           Alert: {{ .Annotations.summary }}
           Description: {{ .Annotations.description }}
+          Status: {{ .Status }}
+          Started: {{ .StartsAt }}
           {{ end }}
         send_resolved: true
