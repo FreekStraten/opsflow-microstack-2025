@@ -1,4 +1,5 @@
 services:
+  # MongoDB voor main API
   mongodb:
     image: mongo:latest
     container_name: mijn-mongo
@@ -6,32 +7,77 @@ services:
       - ./data:/data/db
     restart: unless-stopped
 
+  # MongoDB voor notification service
+  notification-mongo:
+    image: mongo:latest
+    container_name: notification-mongo
+    volumes:
+      - ./notification-data:/data/db
+    restart: unless-stopped
+
+  # RabbitMQ Message Queue
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"    # AMQP port
+      - "15672:15672"  # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin123
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    restart: unless-stopped
+
+  # Main API service
   api:
     build:
       context: .
       dockerfile: Dockerfile.prod
     container_name: mijn-api
     ports:
-      - "3000:12345"  # API on port 3000 locally
+      - "3000:12345"
     environment:
       MONGO_URL: mongodb://mijn-mongo:27017
+      RABBITMQ_URL: amqp://admin:admin123@rabbitmq:5672
       PORT: 12345
       DB_NAME: myapp
     depends_on:
       - mongodb
+      - rabbitmq
     restart: unless-stopped
 
+  # Notification Service
+  notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    container_name: notification-service
+    ports:
+      - "3002:3001"  # GEWIJZIGD: Gebruik poort 3002 naar buiten toe
+    environment:
+      RABBITMQ_URL: amqp://admin:admin123@rabbitmq:5672
+      MONGO_URL: mongodb://notification-mongo:27017
+      DB_NAME: notifications
+      PORT: 3001  # Intern nog steeds 3001
+    depends_on:
+      - notification-mongo
+      - rabbitmq
+    restart: unless-stopped
+
+  # Frontend
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: mijn-frontend
     ports:
-      - "80:80"  # Frontend on port 80
+      - "80:80"
     depends_on:
       - api
     restart: unless-stopped
 
+  # MongoDB Exporter voor monitoring
   db-exporter:
     image: bitnami/mongodb-exporter:latest
     container_name: mongo-exporter
@@ -39,27 +85,30 @@ services:
       - MONGODB_URI=mongodb://mijn-mongo:27017
     restart: unless-stopped
 
+  # Prometheus monitoring
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-      - ./monitoring/prometheus/alerts:/etc/prometheus/alerts  # Mount the entire alerts directory
+      - ./monitoring/prometheus/alerts:/etc/prometheus/alerts
     ports:
       - "9090:9090"
     restart: unless-stopped
 
+  # Grafana dashboard
   grafana:
     build:
       context: monitoring/grafana
       dockerfile: Dockerfile
     container_name: grafana
     ports:
-      - "3100:3000"  # Changed from 3000:3000
+      - "3100:3000"
     depends_on:
       - prometheus
     restart: unless-stopped
 
+  # Alertmanager
   alertmanager:
     image: prom/alertmanager:latest
     container_name: alertmanager
@@ -70,3 +119,6 @@ services:
     restart: unless-stopped
     depends_on:
       - prometheus
+
+volumes:
+  rabbitmq_data:
