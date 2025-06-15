@@ -6,6 +6,12 @@ services:
     volumes:
       - ./data:/data/db
     restart: unless-stopped
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
 
   # MongoDB voor notification service
   notification-mongo:
@@ -14,6 +20,12 @@ services:
     volumes:
       - ./notification-data:/data/db
     restart: unless-stopped
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
 
   # RabbitMQ Message Queue
   rabbitmq:
@@ -28,6 +40,12 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     restart: unless-stopped
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 60s
 
   # Main API service
   api:
@@ -43,8 +61,10 @@ services:
       PORT: 12345
       DB_NAME: myapp
     depends_on:
-      - mongodb
-      - rabbitmq
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     restart: unless-stopped
 
   # Notification Service
@@ -54,15 +74,17 @@ services:
       dockerfile: Dockerfile
     container_name: notification-service
     ports:
-      - "3002:3001"  # GEWIJZIGD: Gebruik poort 3002 naar buiten toe
+      - "3002:3001"
     environment:
       RABBITMQ_URL: amqp://admin:admin123@rabbitmq:5672
       MONGO_URL: mongodb://notification-mongo:27017
       DB_NAME: notifications
-      PORT: 3001  # Intern nog steeds 3001
+      PORT: 3001
     depends_on:
-      - notification-mongo
-      - rabbitmq
+      notification-mongo:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     restart: unless-stopped
 
   # Frontend
@@ -74,7 +96,8 @@ services:
     ports:
       - "80:80"
     depends_on:
-      - api
+      api:
+        condition: service_started
     restart: unless-stopped
 
   # MongoDB Exporter voor monitoring
@@ -83,6 +106,9 @@ services:
     container_name: mongo-exporter
     environment:
       - MONGODB_URI=mongodb://mijn-mongo:27017
+    depends_on:
+      mongodb:
+        condition: service_healthy
     restart: unless-stopped
 
   # Prometheus monitoring

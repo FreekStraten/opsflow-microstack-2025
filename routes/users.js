@@ -9,17 +9,51 @@ const { db } = require("../services/database");
 let channel;
 
 async function connectRabbitMQ() {
-  try {
-    const rabbitmqUrl = process.env.RABBITMQ_URL || 'amqp://localhost:5672';
-    const connection = await amqp.connect(rabbitmqUrl);
-    channel = await connection.createChannel();
+  const rabbitmqUrl = process.env.RABBITMQ_URL || 'amqp://localhost:5672';
+  let retries = 5;
 
-    const queue = 'user_notifications';
-    await channel.assertQueue(queue, { durable: true });
+  while (retries > 0) {
+    try {
+      console.log(`API: Attempting to connect to RabbitMQ... (${6 - retries}/5)`);
 
-    console.log('API connected to RabbitMQ');
-  } catch (error) {
-    console.error('Failed to connect to RabbitMQ:', error);
+      const connection = await amqp.connect(rabbitmqUrl);
+      channel = await connection.createChannel();
+
+      const queue = 'user_notifications';
+      await channel.assertQueue(queue, { durable: true });
+
+      console.log('API: Connected to RabbitMQ successfully');
+
+      // Handle connection errors
+      connection.on('error', (err) => {
+        console.error('RabbitMQ connection error:', err);
+        channel = null;
+        // Retry connection after 5 seconds
+        setTimeout(() => connectRabbitMQ(), 5000);
+      });
+
+      connection.on('close', () => {
+        console.log('RabbitMQ connection closed, attempting to reconnect...');
+        channel = null;
+        setTimeout(() => connectRabbitMQ(), 5000);
+      });
+
+      break; // Exit retry loop on success
+
+    } catch (error) {
+      retries--;
+      console.error(`API: RabbitMQ connection failed: ${error.message}`);
+
+      if (retries === 0) {
+        console.error('API: Failed to connect to RabbitMQ after 5 attempts, will retry periodically');
+        // Don't throw error, just retry every 30 seconds
+        setTimeout(() => connectRabbitMQ(), 30000);
+        return;
+      }
+
+      console.log(`API: Retrying RabbitMQ connection in 5 seconds... (${retries} attempts left)`);
+      await new Promise(resolve => setTimeout(resolve, 5000));
+    }
   }
 }
 
@@ -53,14 +87,20 @@ router.post('/', async function(req, res, next){
 
     // Stuur bericht naar notification service via RabbitMQ
     if (channel) {
-      const queue = 'user_notifications';
-      const message = JSON.stringify(newUser);
+      try {
+        const queue = 'user_notifications';
+        const message = JSON.stringify(newUser);
 
-      channel.sendToQueue(queue, Buffer.from(message), {
-        persistent: true
-      });
+        channel.sendToQueue(queue, Buffer.from(message), {
+          persistent: true
+        });
 
-      console.log('Notification message sent for user:', newUser.name);
+        console.log('Notification message sent for user:', newUser.name);
+      } catch (rabbitError) {
+        console.error('Failed to send RabbitMQ message:', rabbitError);
+        // Don't fail the user creation if notification fails
+        console.warn('User created but notification not sent');
+      }
     } else {
       console.warn('RabbitMQ channel not available, notification not sent');
     }
