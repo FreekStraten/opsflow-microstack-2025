@@ -1,42 +1,62 @@
-const { ExpectationFailed } = require('http-errors'); // (Niet noodzakelijk voor deze test, maar kan worden gebruikt voor foutafhandeling)
+const { ExpectationFailed } = require('http-errors'); // Not necessary for this test, but can be used for error handling
 
-const request = require('supertest'); // Supertest maakt HTTP-verzoeken mogelijk in je tests
-const app = require('../../app'); // Haal je Express-applicatie op (zorg dat dit pad klopt)
+const request = require('supertest'); // Supertest enables HTTP requests in your tests
+const app = require('../../app'); // Import your Express application (make sure this path is correct)
 
-const { db, client } = require('../../services/database'); // Haal je database-verbinding op
+const { db, client } = require('../../services/database'); // Import your database connection
 
-describe('Get Users', () => {
-    // Voordat elke test draait, maken we de 'users' collection leeg
+describe('User Routes', () => {
+    // Before each test runs, clear the 'users' collection completely
     beforeEach(async () => {
+        // Clear all users from the collection
         await db.collection('users').deleteMany({});
+
+        // Wait and verify the collection is actually empty
+        const count = await db.collection('users').countDocuments();
+        if (count > 0) {
+            console.warn(`Warning: Found ${count} users after cleanup, retrying...`);
+            await db.collection('users').deleteMany({});
+        }
+
+        // Double-check it's empty
+        const finalCount = await db.collection('users').countDocuments();
+        expect(finalCount).toBe(0);
     });
 
-    // Na alle tests sluiten we de database-verbinding netjes af
+    // After all tests, close the database connection properly
     afterAll(async () => {
-        client.close();
+        if (client) {
+            await client.close();
+        }
+
+        // Clear any timers
+        jest.clearAllTimers();
+
+        // Give Node.js time to clean up
+        await new Promise(resolve => setTimeout(resolve, 100));
     });
 
-    // Definieer een test voor het ophalen van gebruikers
-    it('should get all users in array', async () => {
-        // Maak een object dat je als testgebruiker wilt invoegen
-        const expected = { 'foo': 'bar' };
+    // Define a test for getting users
+    it('should get all users in array format', async () => {
+        // Create an object that you want to insert as a test user
+        const expectedUser = { 'foo': 'bar' };
 
-        // Voeg dit object toe aan de 'users' collection
-        await db.collection('users').insertOne(expected);
+        // Add this object to the 'users' collection
+        await db.collection('users').insertOne(expectedUser);
 
-        // Omdat MongoDB automatisch een _id toevoegt aan documenten, verwijderen we die uit ons verwachte object voor de vergelijking
-        delete expected._id;
+        // Since MongoDB automatically adds an _id to documents, remove it from our expected object for comparison
+        delete expectedUser._id;
 
-        // Doe een GET-request naar de /users route met Supertest
+        // Make a GET request to the /users route with Supertest
         const res = await request(app).get('/users');
 
-        // Controleer dat de statuscode 200 (OK) is
+        // Check that the status code is 200 (OK)
         expect(res.statusCode).toEqual(200);
 
-        // Controleer dat er precies één user in de response zit (de array lengte is 1)
+        // Check that there is exactly one user in the response (array length is 1)
         expect(res.body.length).toEqual(1);
 
-        // Controleer dat het eerste object in de array de eigenschappen bevat zoals in expected
-        expect(res.body[0]).toEqual(expect.objectContaining(expected));
+        // Check that the first object in the array contains the properties as in expectedUser
+        expect(res.body[0]).toEqual(expect.objectContaining(expectedUser));
     });
 });

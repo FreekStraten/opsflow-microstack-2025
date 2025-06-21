@@ -1,34 +1,50 @@
 const request = require('supertest');
 const { MongoClient } = require('mongodb');
 
-// Mock the app setup
+// Set test environment before importing app
+process.env.NODE_ENV = 'test';
+process.env.MONGO_URL = 'mongodb://localhost:27017';
+process.env.DB_NAME = 'notifications_test';
+
 const app = require('../index');
 
-// Database connection for testing
-let client;
-let db;
-
 describe('Notification Service', () => {
-    beforeAll(async () => {
-        // Connect to test database
-        const uri = process.env.MONGO_URL || 'mongodb://localhost:27017';
-        client = new MongoClient(uri);
-        await client.connect();
-        db = client.db('notifications_test');
+    let db;
+    let client;
 
-        // Clear test data
-        await db.collection('notifications').deleteMany({});
+    // Setup before all tests
+    beforeAll(async () => {
+        // Wait a bit for the app to initialize
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Connect to test database
+        client = new MongoClient(process.env.MONGO_URL);
+        await client.connect();
+        db = client.db(process.env.DB_NAME);
     });
 
-    afterAll(async () => {
-        if (client) {
-            await client.close();
+    // Clean up before each test
+    beforeEach(async () => {
+        if (db) {
+            await db.collection('notifications').deleteMany({});
         }
     });
 
-    beforeEach(async () => {
-        // Clear notifications before each test
-        await db.collection('notifications').deleteMany({});
+    // Clean up after all tests
+    afterAll(async () => {
+        if (db) {
+            await db.collection('notifications').deleteMany({});
+        }
+
+        if (client) {
+            await client.close();
+        }
+
+        // Clear any timers
+        jest.clearAllTimers();
+
+        // Give Node.js time to clean up
+        await new Promise(resolve => setTimeout(resolve, 100));
     });
 
     test('should return healthy status', async () => {
@@ -38,7 +54,9 @@ describe('Notification Service', () => {
 
         expect(response.body).toEqual({
             status: 'healthy',
-            service: 'notification-service'
+            timestamp: expect.any(String),
+            database: expect.any(String),
+            rabbitmq: expect.any(String)
         });
     });
 
@@ -51,24 +69,10 @@ describe('Notification Service', () => {
     });
 
     test('should return correct notification count', async () => {
-        // Add test notifications
+        // Add test notifications directly to database
         await db.collection('notifications').insertMany([
-            {
-                userId: 'test1',
-                userEmail: 'test1@example.com',
-                userName: 'Test User 1',
-                message: 'Test message 1',
-                status: 'sent',
-                createdAt: new Date()
-            },
-            {
-                userId: 'test2',
-                userEmail: 'test2@example.com',
-                userName: 'Test User 2',
-                message: 'Test message 2',
-                status: 'sent',
-                createdAt: new Date()
-            }
+            { message: 'Test notification 1', timestamp: new Date().toISOString() },
+            { message: 'Test notification 2', timestamp: new Date().toISOString() }
         ]);
 
         const response = await request(app)
@@ -79,14 +83,11 @@ describe('Notification Service', () => {
     });
 
     test('should retrieve all notifications', async () => {
-        // Add test notification
+        // Add a test notification directly to database
         const testNotification = {
-            userId: 'test123',
-            userEmail: 'test@example.com',
-            userName: 'Test User',
-            message: 'Welcome Test User! Your account has been created.',
-            status: 'sent',
-            createdAt: new Date()
+            message: 'Test notification',
+            timestamp: new Date().toISOString(),
+            type: 'test'
         };
 
         await db.collection('notifications').insertOne(testNotification);
@@ -96,17 +97,14 @@ describe('Notification Service', () => {
             .expect(200);
 
         expect(response.body).toHaveLength(1);
-        expect(response.body[0]).toMatchObject({
-            userId: 'test123',
-            userEmail: 'test@example.com',
-            userName: 'Test User',
-            message: 'Welcome Test User! Your account has been created.',
-            status: 'sent'
-        });
+        expect(response.body[0]).toEqual(expect.objectContaining({
+            message: 'Test notification',
+            type: 'test'
+        }));
     });
 
     test('should handle database errors gracefully', async () => {
-        // Mock database error by closing connection temporarily
+        // Close the database connection to simulate an error
         await client.close();
 
         const response = await request(app)
@@ -116,8 +114,28 @@ describe('Notification Service', () => {
         expect(response.body).toHaveProperty('error');
 
         // Reconnect for cleanup
-        client = new MongoClient(process.env.MONGO_URL || 'mongodb://localhost:27017');
+        client = new MongoClient(process.env.MONGO_URL);
         await client.connect();
-        db = client.db('notifications_test');
+        db = client.db(process.env.DB_NAME);
+    });
+
+    test('should clear all notifications', async () => {
+        // Add test notifications
+        await db.collection('notifications').insertMany([
+            { message: 'Test notification 1', timestamp: new Date().toISOString() },
+            { message: 'Test notification 2', timestamp: new Date().toISOString() }
+        ]);
+
+        // Clear all notifications
+        await request(app)
+            .delete('/notifications')
+            .expect(200);
+
+        // Verify they're cleared
+        const response = await request(app)
+            .get('/notifications/count')
+            .expect(200);
+
+        expect(response.body).toEqual({ count: 0 });
     });
 });
