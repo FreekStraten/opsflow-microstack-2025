@@ -1,1 +1,37 @@
+# env & secrets
 .env
+.env.*.local
+*.env
+
+# node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+pnpm-lock.yaml
+coverage/
+dist/
+build/
+
+# docker & runtime data
+data/
+**/*.db
+**/*.pid
+**/*.log
+**/diagnostic.data/
+**/.mongodb/
+**/.mongosh/
+*.tgz
+
+# editor/OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# frontend (indien aanwezig)
+frontend/dist/
+frontend/node_modules/
+
+# grafana/prometheus cache (config mag wel mee)
+grafana/data/
+prometheus/data/
