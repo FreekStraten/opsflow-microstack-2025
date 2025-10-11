@@ -4,6 +4,9 @@
 [![CI API](https://github.com/FreekStraten/Devops-Freek-Straten/workflows/CI%20API/badge.svg)](https://github.com/FreekStraten/Devops-Freek-Straten/actions?query=workflow%3A%22CI+API%22)
 [![CI Lint](https://github.com/FreekStraten/Devops-Freek-Straten/workflows/CI%20Lint/badge.svg)](https://github.com/FreekStraten/Devops-Freek-Straten/actions?query=workflow%3A%22CI+Lint%22)
 [![CI Notification](https://github.com/FreekStraten/Devops-Freek-Straten/workflows/CI%20Notification%20Service/badge.svg)](https://github.com/FreekStraten/Devops-Freek-Straten/actions?query=workflow%3A%22CI+Notification+Service%22)
+
+---
+
 ![NodeJS](https://img.shields.io/badge/NodeJS-20.x-339933)
 ![MongoDB](https://img.shields.io/badge/MongoDB-7.x-4DB33D)
 ![Docker](https://img.shields.io/badge/Docker-compose-blue)
