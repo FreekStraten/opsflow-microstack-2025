@@ -38,6 +38,8 @@ prometheus/data/
 Thumbs.db
 .vscode/
 .idea/
+**/.idea/
+*.iml
 
 # ─────────────────────────────
 # frontend (indien aanwezig)
