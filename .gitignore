@@ -1,9 +1,13 @@
+# ─────────────────────────────
 # env & secrets
+# ─────────────────────────────
 .env
 .env.*.local
 *.env
 
+# ─────────────────────────────
 # node
+# ─────────────────────────────
 node_modules/
 npm-debug.log*
 yarn-error.log*
@@ -12,8 +16,11 @@ coverage/
 dist/
 build/
 
+# ─────────────────────────────
 # docker & runtime data
+# ─────────────────────────────
 data/
+notification-data/
 **/*.db
 **/*.pid
 **/*.log
@@ -21,17 +28,19 @@ data/
 **/.mongodb/
 **/.mongosh/
 *.tgz
+grafana/data/
+prometheus/data/
 
-# editor/OS
+# ─────────────────────────────
+# editor / OS
+# ─────────────────────────────
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
 
+# ─────────────────────────────
 # frontend (indien aanwezig)
+# ─────────────────────────────
 frontend/dist/
 frontend/node_modules/
-
-# grafana/prometheus cache (config mag wel mee)
-grafana/data/
-prometheus/data/
