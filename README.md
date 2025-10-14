@@ -80,7 +80,7 @@ Wacht tot alle containers “healthy” zijn (`docker ps`).
 |----------|-----|-----------|
 | API | [http://localhost:3000/users](http://localhost:3000/users) | REST-endpoint (+ /metrics) |
 | Prometheus | [http://localhost:9090/targets](http://localhost:9090/targets) | Targets moeten UP zijn |
-| Grafana | [http://localhost:3100](http://localhost:3100) | Inloggen met `admin / admin` |
+| Grafana | [http://localhost:3100](http://localhost:3100) | Log in met de admin‑credentials uit je `.env` |
 
 ### 4️⃣ Stoppen
 ```bash

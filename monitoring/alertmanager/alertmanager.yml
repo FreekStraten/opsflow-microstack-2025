@@ -1,9 +1,11 @@
 global:
-  smtp_smarthost: 'smtp.sendgrid.net:587'
-  smtp_from: 'freekstratenn@gmail.com'
-  smtp_auth_username: 'apikey'
-  smtp_auth_password: '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'
-  smtp_require_tls: true
+  # All SMTP settings are injected via environment variables.
+  # Ensure the Alertmanager container is started with --config.expand-env=true.
+  smtp_smarthost: ${SMTP_SMARTHOST}
+  smtp_from: ${SMTP_FROM}
+  smtp_auth_username: ${SMTP_AUTH_USERNAME}
+  smtp_auth_password: ${SMTP_AUTH_PASSWORD}
+  smtp_require_tls: ${SMTP_REQUIRE_TLS}
 
 route:
   group_by: ['alertname']
@@ -15,7 +17,7 @@ route:
 receivers:
   - name: 'email-notifications'
     email_configs:
-      - to: 'freekstratenn@gmail.com'
+      - to: '${ALERT_EMAIL_TO}'
         headers:
           Subject: 'DevOps Alert: {{ .GroupLabels.alertname }}'
         html: |

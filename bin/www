@@ -5,6 +5,7 @@
  */
 
 var app = require('../app');
+var { connectToDatabase } = require('../services/database');
 var debug = require('debug')('week1:server');
 var http = require('http');
 
@@ -25,9 +26,20 @@ var server = http.createServer(app);
  * Listen on provided port, on all network interfaces.
  */
 
-server.listen(port);
-server.on('error', onError);
-server.on('listening', onListening);
+// Initialize dependencies (DB) before listening
+;(async () => {
+  try {
+    if (process.env.NODE_ENV !== 'test') {
+      await connectToDatabase();
+    }
+    server.listen(port);
+    server.on('error', onError);
+    server.on('listening', onListening);
+  } catch (err) {
+    console.error('Failed to initialize server dependencies:', err);
+    process.exit(1);
+  }
+})();
 
 /**
  * Normalize a port into a number, string, or false.

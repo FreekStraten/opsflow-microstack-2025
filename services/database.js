@@ -4,32 +4,36 @@ const { MongoClient } = require("mongodb");
 const uri = process.env.MONGO_URL || "mongodb://localhost:27017";
 const dbName = process.env.DB_NAME || "myapp";
 
-console.log("=== DATABASE CONNECTION INFO ===");
-console.log("MONGO_URL:", uri);
-console.log("DB_NAME:", dbName);
-console.log("=================================");
-
+// Single MongoClient instance (lazy connect)
 const client = new MongoClient(uri);
 
+let isConnected = false;
+let dbInstance = client.db(dbName);
+
 async function connectToDatabase() {
+    if (isConnected) {
+        return dbInstance;
+    }
     try {
         await client.connect();
-        console.log("Successfully connected to MongoDB");
-
-        // Ensure the database exists
-        const db = client.db(dbName);
-        const collections = await db.listCollections().toArray();
-        console.log("Available collections:", collections.map(c => c.name));
-
-        return db;
+        dbInstance = client.db(dbName);
+        isConnected = true;
+        console.log("MongoDB connected");
+        return dbInstance;
     } catch (error) {
         console.error("Failed to connect to MongoDB:", error);
         throw error;
     }
 }
 
+function getDb() {
+    return dbInstance;
+}
+
 module.exports = {
-    client: client,
-    connectToDatabase: connectToDatabase,
-    db: client.db(dbName)
+    client,
+    connectToDatabase,
+    getDb,
+    // Keep exporting a db handle for backward compatibility (lazy use)
+    db: dbInstance
 };

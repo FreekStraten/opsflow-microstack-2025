@@ -51,32 +51,6 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
-// Database initialization - only in non-test environments
-const { db } = require('./services/database');
-
-if (!isTestEnvironment) {
-  setTimeout(async () => {
-    try {
-      console.log('Database connected, checking for initial data...');
-      const userCount = await db.collection('users').countDocuments();
-      if (userCount === 0) {
-        console.log('No users found, adding initial data...');
-        const initialUsers = [
-          { name: 'John Doe', email: 'john@example.com', age: 30 },
-          { name: 'Jane Smith', email: 'jane@example.com', age: 25 },
-          { name: 'Bob Johnson', email: 'bob@example.com', age: 35 }
-        ];
-        await db.collection('users').insertMany(initialUsers);
-        console.log('Initial data added successfully');
-      } else {
-        console.log(`Found ${userCount} existing users, skipping initial data`);
-      }
-    } catch (error) {
-      console.error('Error initializing database data:', error);
-    }
-  }, 1000);
-} else {
-  console.log('Test environment detected, skipping initial data setup');
-}
+// Database seeding moved to scripts/init-data.js when needed
 
 module.exports = app;
