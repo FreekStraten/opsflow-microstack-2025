@@ -4,6 +4,9 @@
 .env
 .env.*.local
 *.env
+.env.*
+!.env.example
+!notification-service/.env.example
 
 # ─────────────────────────────
 # node

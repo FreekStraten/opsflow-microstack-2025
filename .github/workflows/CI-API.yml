@@ -1,6 +1,6 @@
 # .github/workflows/CI-API.yml
 
-name: CI API
+name: CI API (root)
 
 permissions:
   contents: write       # Nodig voor write toegang tot de repo content
@@ -11,11 +11,31 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - "api/**"  # Trigger alleen als er iets verandert in de api-map
+      - "app.js"
+      - "routes/**"
+      - "services/**"
+      - "bin/**"
+      - "scripts/**"
+      - "views/**"
+      - "public/**"
+      - "Dockerfile*"
+      - "docker-compose.yml"
+      - "package.json"
+      - "package-lock.json"
   pull_request:
     branches: [ "main" ]
     paths:
-      - "api/**"  # Trigger alleen als er iets verandert in de api-map
+      - "app.js"
+      - "routes/**"
+      - "services/**"
+      - "bin/**"
+      - "scripts/**"
+      - "views/**"
+      - "public/**"
+      - "Dockerfile*"
+      - "docker-compose.yml"
+      - "package.json"
+      - "package-lock.json"
 
 jobs:
   build:
@@ -38,17 +58,14 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
-      - name: Install dependencies in API folder
+      - name: Install dependencies
         run: npm ci
-        working-directory: api
 
       - name: Build (if applicable)
         run: npm run build --if-present
-        working-directory: api
 
-      - name: Run tests in API folder
+      - name: Run tests
         run: npm test
-        working-directory: api
 
       - name: Jest coverage report
         uses: ArtiomTr/jest-coverage-report-action@v2.3.1
