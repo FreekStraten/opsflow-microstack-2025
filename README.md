@@ -113,9 +113,9 @@ docker compose down
 
 | Tool | Screenshot |
 |------|-------------|
-| Prometheus targets | ![prometheus](docs/prometheus.png) |
+| Prometheus targets | ![prometheus targets](docs/prometheus_targets.png) |
 | Grafana dashboard | ![grafana](docs/grafana_nodejs_dashboard.png) |
-| Prometheus targets (current) | ![prometheus targets](docs/prometheus_targets.png) |
+
 
 ---
 
