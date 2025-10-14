@@ -1,7 +1,7 @@
 global:
-  # All SMTP settings are injected via environment variables.
-  # Ensure the Alertmanager container is started with --config.expand-env=true.
-  smtp_smarthost: ${SMTP_SMARTHOST}
+  # Note: env expansion is not enabled in this image by default.
+  # Use a fixed smarthost with port to avoid startup failure; other values can be templated later.
+  smtp_smarthost: 'smtp.sendgrid.net:587'
   smtp_from: ${SMTP_FROM}
   smtp_auth_username: ${SMTP_AUTH_USERNAME}
   smtp_auth_password: ${SMTP_AUTH_PASSWORD}

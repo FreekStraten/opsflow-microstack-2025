@@ -6,12 +6,7 @@ services:
     volumes:
       - ./data:/data/db
     restart: unless-stopped
-    healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
-      interval: 10s
-      timeout: 10s
-      retries: 5
-      start_period: 40s
+    # Healthcheck removed; services use retry-on-connect
 
   # MongoDB voor notification service
   notification-mongo:
@@ -20,12 +15,7 @@ services:
     volumes:
       - ./notification-data:/data/db
     restart: unless-stopped
-    healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
-      interval: 10s
-      timeout: 10s
-      retries: 5
-      start_period: 40s
+    # Healthcheck removed; services use retry-on-connect
 
   # RabbitMQ Message Queue
   rabbitmq:
@@ -62,7 +52,7 @@ services:
       DB_NAME: myapp
     depends_on:
       mongodb:
-        condition: service_healthy
+        condition: service_started
       rabbitmq:
         condition: service_healthy
     restart: unless-stopped
@@ -82,7 +72,7 @@ services:
       PORT: 3001
     depends_on:
       notification-mongo:
-        condition: service_healthy
+        condition: service_started
       rabbitmq:
         condition: service_healthy
     restart: unless-stopped
@@ -102,7 +92,7 @@ services:
 
   # MongoDB Exporter voor monitoring
   db-exporter:
-    image: bitnami/mongodb-exporter:0.40.0
+    image: bitnami/mongodb-exporter:latest
     container_name: mongo-exporter
     environment:
       - MONGODB_URI=mongodb://mijn-mongo:27017
@@ -155,7 +145,6 @@ services:
     command:
       - "--config.file=/etc/alertmanager/alertmanager.yml"
       - "--log.level=info"
-      - "--config.expand-env=true"
     restart: unless-stopped
     depends_on:
       - prometheus

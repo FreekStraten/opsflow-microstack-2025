@@ -104,8 +104,8 @@ describe('Notification Service', () => {
     });
 
     test('should handle database errors gracefully', async () => {
-        // Close the database connection to simulate an error
-        await client.close();
+        // Close the service DB connection to simulate an error
+        await app.__test.closeDb();
 
         const response = await request(app)
             .get('/notifications')
@@ -113,7 +113,10 @@ describe('Notification Service', () => {
 
         expect(response.body).toHaveProperty('error');
 
-        // Reconnect for cleanup
+        // Reconnect service DB for subsequent tests
+        await app.__test.connectDb();
+
+        // Reconnect local client for test DB operations
         client = new MongoClient(process.env.MONGO_URL);
         await client.connect();
         db = client.db(process.env.DB_NAME);

@@ -18,17 +18,38 @@ let db = null;
 let client = null;
 let channel = null;
 
+// Ensure DB connection is available (used in tests and lazy paths)
+async function ensureDb() {
+    if (!db) {
+        // In test environment, do not auto-reconnect so tests can simulate failures
+        if (isTestEnvironment) {
+            return null;
+        }
+        await connectToDatabase();
+    }
+    return db;
+}
+
 // Connect to MongoDB
 async function connectToDatabase() {
-    try {
-        client = new MongoClient(MONGO_URL);
-        await client.connect();
-        db = client.db(DB_NAME);
-        console.log('Connected to notification database');
-        return db;
-    } catch (error) {
-        console.error('Failed to connect to database:', error);
-        throw error;
+    const maxRetries = isTestEnvironment ? 1 : 10;
+    const delayMs = 3000;
+    let attempt = 0;
+    while (attempt < maxRetries) {
+        try {
+            client = new MongoClient(MONGO_URL);
+            await client.connect();
+            db = client.db(DB_NAME);
+            console.log('Connected to notification database');
+            return db;
+        } catch (error) {
+            attempt++;
+            console.error(`Failed to connect to database (attempt ${attempt}/${maxRetries}):`, error.message || error);
+            if (attempt >= maxRetries || isTestEnvironment) {
+                throw error;
+            }
+            await new Promise(r => setTimeout(r, delayMs));
+        }
     }
 }
 
@@ -133,11 +154,8 @@ app.get('/health', (req, res) => {
 
 app.get('/notifications', async (req, res) => {
     try {
-        if (!db) {
-            return res.status(500).json({ error: 'Database not connected' });
-        }
-
-        const notifications = await db.collection('notifications').find({}).toArray();
+        const database = await ensureDb();
+        const notifications = await database.collection('notifications').find({}).toArray();
         res.json(notifications);
     } catch (error) {
         console.error('Error fetching notifications:', error);
@@ -147,11 +165,8 @@ app.get('/notifications', async (req, res) => {
 
 app.get('/notifications/count', async (req, res) => {
     try {
-        if (!db) {
-            return res.status(500).json({ error: 'Database not connected' });
-        }
-
-        const count = await db.collection('notifications').countDocuments();
+        const database = await ensureDb();
+        const count = await database.collection('notifications').countDocuments();
         res.json({ count });
     } catch (error) {
         console.error('Error counting notifications:', error);
@@ -161,11 +176,8 @@ app.get('/notifications/count', async (req, res) => {
 
 app.delete('/notifications', async (req, res) => {
     try {
-        if (!db) {
-            return res.status(500).json({ error: 'Database not connected' });
-        }
-
-        await db.collection('notifications').deleteMany({});
+        const database = await ensureDb();
+        await database.collection('notifications').deleteMany({});
         res.json({ message: 'All notifications cleared' });
     } catch (error) {
         console.error('Error clearing notifications:', error);
@@ -189,4 +201,32 @@ if (require.main === module) {
         console.error('Failed to start notification service:', error);
         process.exit(1);
     });
+}
+
+// In test environment, proactively connect to the database (skip RabbitMQ)
+if (isTestEnvironment) {
+    connectToDatabase().catch((err) => {
+        console.error('Test DB connection failed:', err);
+    });
+}
+
+// Expose minimal test helpers
+if (isTestEnvironment) {
+    app.__test = {
+        closeDb: async () => {
+            try {
+                if (client) {
+                    await client.close();
+                }
+            } catch (e) {
+                // ignore
+            } finally {
+                db = null;
+                client = null;
+            }
+        },
+        connectDb: async () => {
+            await connectToDatabase();
+        }
+    };
 }

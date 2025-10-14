@@ -14,15 +14,24 @@ async function connectToDatabase() {
     if (isConnected) {
         return dbInstance;
     }
-    try {
-        await client.connect();
-        dbInstance = client.db(dbName);
-        isConnected = true;
-        console.log("MongoDB connected");
-        return dbInstance;
-    } catch (error) {
-        console.error("Failed to connect to MongoDB:", error);
-        throw error;
+    const maxRetries = 10;
+    const delayMs = 3000;
+    let attempt = 0;
+    while (attempt < maxRetries) {
+        try {
+            await client.connect();
+            dbInstance = client.db(dbName);
+            isConnected = true;
+            console.log("MongoDB connected");
+            return dbInstance;
+        } catch (error) {
+            attempt++;
+            console.error(`MongoDB connect attempt ${attempt}/${maxRetries} failed:`, error.message || error);
+            if (attempt >= maxRetries) {
+                throw error;
+            }
+            await new Promise(r => setTimeout(r, delayMs));
+        }
     }
 }
 
