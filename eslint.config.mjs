@@ -9,6 +9,10 @@ export default [
         ...globals.browser,
         ...globals.node  // Voeg Node.js globals toe
       }
+    },
+    rules: {
+      // Ignore unused function args that start with _ (e.g., Express next)
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }]
     }
   },
   pluginJs.configs.recommended,

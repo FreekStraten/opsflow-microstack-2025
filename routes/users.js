@@ -66,7 +66,7 @@ async function sendNotification(message) {
 }
 
 /* GET users listing. */
-router.get('/', async function(req, res, next) {
+router.get('/', async function(req, res) {
   try {
     // Get all users from database
     const users = await db.collection('users').find({}).toArray();
@@ -82,7 +82,7 @@ router.get('/', async function(req, res, next) {
 });
 
 /* POST new user */
-router.post('/', async function(req, res, next) {
+router.post('/', async function(req, res) {
   try {
     const userData = req.body;
 

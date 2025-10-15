@@ -218,7 +218,7 @@ if (isTestEnvironment) {
                 if (client) {
                     await client.close();
                 }
-            } catch (e) {
+            } catch {
                 // ignore
             } finally {
                 db = null;
