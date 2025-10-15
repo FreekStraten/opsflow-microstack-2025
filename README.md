@@ -104,3 +104,11 @@ Bij gebruik van SendGrid:
 ## Licentie
 
 MIT — zie `LICENSE`.
+
+## Security & Disclaimer
+
+- Dit project is “as‑is” en bedoeld voor educatieve/demo‑doeleinden; niet voor productie.
+- Geen SLA of garantie op (tijdige) security fixes of responses.
+- Gebruik op eigen risico. Afgeleide projecten/gebruik buiten deze repo vallen buiten scope.
+- Meld kwetsbaarheden bij voorkeur privé via GitHub Security Advisories (of open een PR met een voorstel tot fix zonder exploitdetails).
+- Zie ook `SECURITY.md` voor de volledige policy.
