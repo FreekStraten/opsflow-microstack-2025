@@ -91,6 +91,7 @@ npm run lint
 Screenshots:
 
 - Prometheus targets: ![prometheus targets](docs/prometheus_targets.png)
+- Prometheus targets (DOWN voorbeeld): ![prometheus targets down](docs/prometheus_targets_down.png)
 - Grafana dashboard: ![grafana](docs/grafana_nodejs_dashboard.png)
 
 ## E‑mail alerts (SendGrid)
@@ -100,6 +101,10 @@ Bij gebruik van SendGrid:
 - `SMTP_AUTH_PASSWORD` is je SendGrid API key
 - `SMTP_FROM` moet een geverifieerde afzender zijn (Single Sender of Domain Auth)
 - `ALERT_EMAIL_TO` is de ontvanger
+
+Voorbeeld alert e-mail (service down):
+
+![Alert email - service down](docs/email_service_down.png)
 
 ## Licentie
 
