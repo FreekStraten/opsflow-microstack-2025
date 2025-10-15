@@ -14,7 +14,7 @@ if (!process.env.DB_NAME && process.env.MONGO_URL) {
         const u = new URL(process.env.MONGO_URL);
         const derived = u.pathname.replace(/^\//, '') || 'test';
         process.env.DB_NAME = derived;
-    } catch (_) {
+    } catch {
         // leave undefined if parsing fails
     }
 }
