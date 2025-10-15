@@ -36,14 +36,15 @@ on:
       - "docker-compose.yml"
       - "package.json"
       - "package-lock.json"
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
-    # Gebruik je PAT door de GITHUB_TOKEN-variabele te overschrijven
+    # Gebruik het standaard GitHub token
     env:
-      GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     strategy:
       matrix:

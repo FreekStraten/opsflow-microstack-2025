@@ -1,7 +1,5 @@
 global:
-  # Note: env expansion is not enabled in this image by default.
-  # Use a fixed smarthost with port to avoid startup failure; other values can be templated later.
-  smtp_smarthost: 'smtp.sendgrid.net:587'
+  smtp_smarthost: ${SMTP_SMARTHOST}
   smtp_from: ${SMTP_FROM}
   smtp_auth_username: ${SMTP_AUTH_USERNAME}
   smtp_auth_password: ${SMTP_AUTH_PASSWORD}

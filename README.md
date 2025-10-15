@@ -1,159 +1,106 @@
-# 🧭 OpsFlow Microstack (DevOps · 2 EC)
+# OpsFlow Microstack (DevOps • 2 EC)
 
-[![Node.js CI](https://github.com/FreekStraten/Devops-Freek-Straten/workflows/Node.js%20CI/badge.svg)](https://github.com/FreekStraten/Devops-Freek-Straten/actions?query=workflow%3A%22Node.js+CI%22)
-[![CI API](https://github.com/FreekStraten/Devops-Freek-Straten/workflows/CI%20API/badge.svg)](https://github.com/FreekStraten/Devops-Freek-Straten/actions?query=workflow%3A%22CI+API%22)
-[![CI Lint](https://github.com/FreekStraten/Devops-Freek-Straten/workflows/CI%20Lint/badge.svg)](https://github.com/FreekStraten/Devops-Freek-Straten/actions?query=workflow%3A%22CI+Lint%22)
-[![CI Notification](https://github.com/FreekStraten/Devops-Freek-Straten/workflows/CI%20Notification%20Service/badge.svg)](https://github.com/FreekStraten/Devops-Freek-Straten/actions?query=workflow%3A%22CI+Notification+Service%22)
+<!-- Build status badges (application) -->
+[![CI API](https://github.com/FreekStraten/opsflow-microstack-2025/actions/workflows/CI-API.yml/badge.svg?branch=main)](https://github.com/FreekStraten/opsflow-microstack-2025/actions/workflows/CI-API.yml)
+[![CI Lint](https://github.com/FreekStraten/opsflow-microstack-2025/actions/workflows/CI-LINT.yml/badge.svg?branch=main)](https://github.com/FreekStraten/opsflow-microstack-2025/actions/workflows/CI-LINT.yml)
+[![CI Notification Service](https://github.com/FreekStraten/opsflow-microstack-2025/actions/workflows/CI-NOTIFICATION.yml/badge.svg?branch=main)](https://github.com/FreekStraten/opsflow-microstack-2025/actions/workflows/CI-NOTIFICATION.yml)
 
 ---
 
+<!-- Tech badges (languages & tools) -->
 ![NodeJS](https://img.shields.io/badge/NodeJS-20.x-339933)
 ![MongoDB](https://img.shields.io/badge/MongoDB-7.x-4DB33D)
 ![Docker](https://img.shields.io/badge/Docker-compose-blue)
-![Status](https://img.shields.io/badge/status-active-brightgreen)
 
-**DevOps-opdracht (Avans HBO-ICT, 2025 – 2 EC)** — richt zich op het **automatiseren, containeriseren en monitoren** van een NodeJS-microservice.  
-De nadruk ligt op CI-kwaliteit, observability en herhaalbare deployment via Docker Compose.
+Kleine maar complete DevOps‑omgeving met Node.js API, MongoDB, monitoring (Prometheus/Grafana) en CI via GitHub Actions.
 
-> **Focus van de opdracht:** Continuous Integration · Containerization · Monitoring · Observability
+## Doel
 
----
+Meerdere services (API, database, monitoring) werken samen met reproduceerbare deployment via Docker Compose, automatische tests/linting en observability.
 
-## ⚙️ Doel
+## Tech stack
 
-Een kleine, maar complete DevOps-omgeving opzetten waarin meerdere services (API, database, monitoring) samenwerken:
+Node.js • Express • MongoDB • Docker Compose • Prometheus • Grafana • ESLint • Jest • GitHub Actions
 
-- API en database draaien in containers  
-- Monitoring via Prometheus + Grafana  
-- Automatische tests en linting via GitHub Actions  
-- Persistent data + metrics via Docker volumes  
-- Code-kwaliteit en configuratie as code  
+## Projectstructuur
 
----
-
-## 🧩 Tech stack
-Node.js · Express · MongoDB · Docker Compose · Prometheus · Grafana · ESLint · Jest · GitHub Actions
-
----
-
-## 📦 Projectstructuur
 ```
-opsflow-microstack/
-├── api/                     # Express + MongoDB service
-│   ├── routes/
-│   ├── services/database.js
-│   ├── app.js               # + Prometheus metrics middleware
-│   └── package.json
-├── docker-compose.yml       # API + DB + Monitoring stack
-├── prometheus/prometheus.yml
-├── grafana/
-│   ├── provisioning/        # Datasource & dashboard config
-│   └── dashboards/
-└── docs/                    # Screenshots & README assets
+api/                      # Express + MongoDB service
+  routes/
+  services/database.js
+  app.js                  # + Prometheus metrics middleware
+  package.json
+docker-compose.yml        # API + DB + Monitoring stack
+monitoring/
+  prometheus/prometheus.yml
+  grafana/
+    provisioning/         # Datasource & dashboard config
+    dashboards/
+docs/                     # Screenshots & README assets
 ```
 
----
+## Quick Start
 
-## 🚀 Quick Start
+Vereisten:
+- Docker Desktop (v4.30+)
+- NodeJS 20+ (alleen nodig voor lokale ontwikkeling)
+- Poorten: 3000 (API), 8080 (Frontend), 9090 (Prometheus), 3100 (Grafana), 9093 (Alertmanager)
 
-> Vereisten:  
-> • **Docker Desktop** (v4.30+)  
-> • **NodeJS 20+** (alleen nodig voor lokale ontwikkeling)  
-> • **Poorten vrij:** 3000 (API), 9090 (Prometheus), 3100 (Grafana)
-
-### 1️⃣ Clone repo
-```bash
-git clone https://github.com/FreekStraten/opsflow-microstack.git
-cd opsflow-microstack
+1) Clone repo
+```
+git clone https://github.com/FreekStraten/opsflow-microstack-2025.git
+cd opsflow-microstack-2025
 ```
 
-### 2️⃣ Start volledige omgeving
-```bash
+2) Start volledige omgeving
+```
 docker compose up -d
 ```
 
-Wacht tot alle containers “healthy” zijn (`docker ps`).
-
-### 3️⃣ Open services
+3) Open services
 
 | Service | URL | Opmerking |
-|----------|-----|-----------|
-| API | [http://localhost:3000/users](http://localhost:3000/users) | REST-endpoint (+ /metrics) |
-| Prometheus | [http://localhost:9090/targets](http://localhost:9090/targets) | Targets moeten UP zijn |
-| Grafana | [http://localhost:3100](http://localhost:3100) | Log in met de admin‑credentials uit je `.env` |
+|--------|-----|-----------|
+| API | http://localhost:3000/users | REST-endpoint (+ /metrics) |
+| Frontend | http://localhost:8080 | Proxy naar API; ook /users werkt |
+| Prometheus | http://localhost:9090/targets | Targets moeten UP zijn |
+| Grafana | http://localhost:3100 | Inloggen met admin‑credentials uit `.env` |
+| Alertmanager | http://localhost:9093 | Test alerts via API |
 
-### 4️⃣ Stoppen
-```bash
+4) Stoppen
+```
 docker compose down
 ```
 
----
+## CI Workflows
 
-## 🧠 Learning Focus
+Workflows draaien bij push/PR op `main`. Handmatig triggeren kan via de Actions tab (workflow_dispatch is ingeschakeld).
 
-> **Continuous Integration · Containerization · Monitoring & Alerting**
+Lokaal ontwikkelen/testen:
+```
+npm ci
+npm test
+npm run lint
+```
 
-**CI/CD pipeline**
-- GitHub Actions voor lint + tests bij iedere push  
-- Build van Docker image bij release tag  
+## Monitoring
 
-**Containerization**
-- Alle services geconfigureerd via `docker-compose.yml`  
-- Netwerk, volumes en omgevingsvariabelen as code  
+- API geïnstrumenteerd met `express-prom-bundle` → Prometheus scrapet de API.
+- MongoDB metrics via mongodb‑exporter.
 
-**Monitoring & Metrics**
-- Express-API instrumented met `express-prom-bundle`  
-- Prometheus scrapet API en MongoDB-exporter  
-- Grafana dashboard met requests/s, latency en error-rate  
+Screenshots:
 
----
+- Prometheus targets: ![prometheus targets](docs/prometheus_targets.png)
+- Grafana dashboard: ![grafana](docs/grafana_nodejs_dashboard.png)
 
-## 📊 Monitoring Preview
-*(screenshots worden toegevoegd)*
+## E‑mail alerts (SendGrid)
 
-| Tool | Screenshot |
-|------|-------------|
-| Prometheus targets | ![prometheus targets](docs/prometheus_targets.png) |
-| Grafana dashboard | ![grafana](docs/grafana_nodejs_dashboard.png) |
+Bij gebruik van SendGrid:
+- `SMTP_AUTH_USERNAME` is altijd `apikey`
+- `SMTP_AUTH_PASSWORD` is je SendGrid API key
+- `SMTP_FROM` moet een geverifieerde afzender zijn (Single Sender of Domain Auth)
+- `ALERT_EMAIL_TO` is de ontvanger
 
+## Licentie
 
----
-
-## 📝 Korte opdrachtomschrijving
-
-### 1.1 – Repository opzetten
-Aanmaken van GitHub Classroom repository en team voor het DevOps-project.
-
-### 1.2 – NodeJS-applicatie
-Basissetup van een Express-applicatie die later als microservice fungeert.
-
-### 1.3 – MongoDB integratie
-Aansluiten van MongoDB-database, zowel lokaal als via container.
-
-### 1.4 – Automatische tests
-Schrijven van Jest + Supertest unit-tests om API endpoints te verifiëren.
-
-### 1.5 – Statische code-analyse
-Inrichten van ESLint om codekwaliteit automatisch te controleren.
-
-### 1.6 – Omgevingsvariabelen
-Gebruik van `.env` voor configuratie (MONGO_URL, DB_NAME) en scheiding van omgevingen.
-
-### 2.x – CI integratie
-GitHub Actions workflows voor automatisch linten, testen en badges genereren.
-
-### 3.x – Containerization
-Opzetten van Dockerfiles, Compose-stack en netwerkverbinding tussen API en database.
-
-### 4.x – Monitoring
-Integreren van Prometheus en Grafana om metrics te verzamelen en dashboards te tonen.
-
-### 5–6 – Metrics, Grafana en Alerts
-Prometheus metrics endpoint toegevoegd aan API, dashboards geconfigureerd, alerts opgezet.
-
----
-
-## 🏫 Credits
-Ontwikkeld voor het vak **DevOps (2 EC)** – Avans Hogeschool, 2025  
-**Auteur:** Freek Straten  
-**Doel:** automatisering en monitoring binnen een containerized microservice-omgeving.
+MIT — zie `LICENSE`.

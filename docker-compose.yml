@@ -4,7 +4,7 @@ services:
     image: mongo:7.0
     container_name: mijn-mongo
     volumes:
-      - ./data:/data/db
+      - mongo_data:/data/db
     restart: unless-stopped
     # Healthcheck removed; services use retry-on-connect
 
@@ -13,7 +13,7 @@ services:
     image: mongo:7.0
     container_name: notification-mongo
     volumes:
-      - ./notification-data:/data/db
+      - notification_mongo_data:/data/db
     restart: unless-stopped
     # Healthcheck removed; services use retry-on-connect
 
@@ -84,7 +84,7 @@ services:
       dockerfile: Dockerfile
     container_name: mijn-frontend
     ports:
-      - "80:80"
+      - "8080:80"
     depends_on:
       api:
         condition: service_started
@@ -98,7 +98,7 @@ services:
       - MONGODB_URI=mongodb://mijn-mongo:27017
     depends_on:
       mongodb:
-        condition: service_healthy
+        condition: service_started
     restart: unless-stopped
 
   # Prometheus monitoring
@@ -129,10 +129,12 @@ services:
 
   # Alertmanager
   alertmanager:
-    image: prom/alertmanager:v0.27.0
+    build:
+      context: monitoring/alertmanager
+      dockerfile: Dockerfile
     container_name: alertmanager
     volumes:
-      - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml.tmpl
     ports:
       - "9093:9093"
     environment:
@@ -142,12 +144,12 @@ services:
       SMTP_AUTH_PASSWORD: ${SMTP_AUTH_PASSWORD}
       SMTP_REQUIRE_TLS: ${SMTP_REQUIRE_TLS}
       ALERT_EMAIL_TO: ${ALERT_EMAIL_TO}
-    command:
-      - "--config.file=/etc/alertmanager/alertmanager.yml"
-      - "--log.level=info"
+    # entrypoint handles templating + start
     restart: unless-stopped
     depends_on:
       - prometheus
 
 volumes:
   rabbitmq_data:
+  mongo_data:
+  notification_mongo_data:
