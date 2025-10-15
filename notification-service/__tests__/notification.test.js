@@ -1,10 +1,23 @@
 const request = require('supertest');
 const { MongoClient } = require('mongodb');
 
+// Increase default Jest timeout to avoid CI flakiness
+jest.setTimeout(20000);
+
 // Set test environment before importing app
 process.env.NODE_ENV = 'test';
-process.env.MONGO_URL = 'mongodb://localhost:27017';
-process.env.DB_NAME = 'notifications_test';
+
+// Do not override MONGO_URL; rely on @shelf/jest-mongodb preset
+// Derive DB_NAME from MONGO_URL if not provided by the preset
+if (!process.env.DB_NAME && process.env.MONGO_URL) {
+    try {
+        const u = new URL(process.env.MONGO_URL);
+        const derived = u.pathname.replace(/^\//, '') || 'test';
+        process.env.DB_NAME = derived;
+    } catch (_) {
+        // leave undefined if parsing fails
+    }
+}
 
 const app = require('../index');
 
@@ -14,10 +27,12 @@ describe('Notification Service', () => {
 
     // Setup before all tests
     beforeAll(async () => {
-        // Wait a bit for the app to initialize
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Ensure the service connects to the test DB
+        if (app.__test && app.__test.connectDb) {
+            await app.__test.connectDb();
+        }
 
-        // Connect to test database
+        // Connect to test database for direct operations
         client = new MongoClient(process.env.MONGO_URL);
         await client.connect();
         db = client.db(process.env.DB_NAME);
@@ -32,6 +47,10 @@ describe('Notification Service', () => {
 
     // Clean up after all tests
     afterAll(async () => {
+        // Close service DB connection to avoid open handles
+        if (app.__test && app.__test.closeDb) {
+            await app.__test.closeDb();
+        }
         if (db) {
             await db.collection('notifications').deleteMany({});
         }
