@@ -1,4 +1,4 @@
-const { ExpectationFailed } = require('http-errors'); // Not necessary for this test, but can be used for error handling
+// Removed unused ExpectationFailed import to satisfy ESLint
 
 const request = require('supertest'); // Supertest enables HTTP requests in your tests
 const app = require('../../app'); // Import your Express application (make sure this path is correct)

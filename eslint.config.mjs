@@ -13,6 +13,14 @@ export default [
   },
   pluginJs.configs.recommended,
   {
+    files: ["**/__tests__/**/*.js", "**/*.test.js"],
+    languageOptions: {
+      globals: {
+        ...globals.jest
+      }
+    }
+  },
+  {
     // Negeer bepaalde folders
     ignores: ["node_modules/**", ".git/**", "data/**"]
   }
